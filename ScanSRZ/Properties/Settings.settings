@@ -1,0 +1,46 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="Scaner.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="ConnectDB" Type="(Connection string)" Scope="Application">
+      <DesignTimeValue Profile="(Default)" />
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="Path_Inp" Type="System.String" Scope="User">
+      <Value Profile="(Default)">\\srv-cnt-db2\ViPNet640_СРЗ_Прикрепление\Input\</Value>
+    </Setting>
+    <Setting Name="Path_Out" Type="System.String" Scope="User">
+      <Value Profile="(Default)">\\srv-cnt-db2\ViPNet640_СРЗ_Прикрепление\Outlpu\</Value>
+    </Setting>
+    <Setting Name="Path_Arch" Type="System.String" Scope="User">
+      <Value Profile="(Default)">\\srv-cnt-db2\ViPNet640_СРЗ_Прикрепление\Utility\Arch\winrar.exe</Value>
+    </Setting>
+    <Setting Name="Path_Bcp" Type="System.String" Scope="User">
+      <Value Profile="(Default)">\\srv-cnt-db2\ViPNet640_СРЗ_Прикрепление\Utility\WXP\bcp.exe</Value>
+    </Setting>
+    <Setting Name="Time_On" Type="System.String" Scope="User">
+      <Value Profile="(Default)">7</Value>
+    </Setting>
+    <Setting Name="Time_Off" Type="System.String" Scope="User">
+      <Value Profile="(Default)">18</Value>
+    </Setting>
+    <Setting Name="Cycle" Type="System.String" Scope="User">
+      <Value Profile="(Default)">300</Value>
+    </Setting>
+    <Setting Name="NameSrvSQL" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="AutoRunApp" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="Path_Tmp" Type="System.String" Scope="User">
+      <Value Profile="(Default)">\\srv-cnt-db2\ViPNet640_СРЗ_Прикрепление\Arc\</Value>
+    </Setting>
+    <Setting Name="AutoRunScan" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="Storage_Depth" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Месяц</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>

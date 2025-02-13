@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.136
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "scansrz", "ScanSRZ\scansrz.csproj", "{E8CB007D-6336-4271-B6F8-ED4FDE3C69A7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E8CB007D-6336-4271-B6F8-ED4FDE3C69A7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E8CB007D-6336-4271-B6F8-ED4FDE3C69A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E8CB007D-6336-4271-B6F8-ED4FDE3C69A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E8CB007D-6336-4271-B6F8-ED4FDE3C69A7}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D6E2DAA6-3310-4F17-A28E-6ABB2DF89ADB}
+	EndGlobalSection
+EndGlobal

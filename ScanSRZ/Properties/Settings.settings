@@ -42,5 +42,11 @@
     <Setting Name="Storage_Depth" Type="System.String" Scope="User">
       <Value Profile="(Default)">Месяц</Value>
     </Setting>
+    <Setting Name="MaxRecMO" Type="System.String" Scope="User">
+      <Value Profile="(Default)">3000</Value>
+    </Setting>
+    <Setting Name="MaxRecSZ" Type="System.String" Scope="User">
+      <Value Profile="(Default)">99999</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

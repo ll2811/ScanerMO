@@ -175,5 +175,29 @@ namespace Scaner.Properties {
                 this["Storage_Depth"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("3000")]
+        public string MaxRecMO {
+            get {
+                return ((string)(this["MaxRecMO"]));
+            }
+            set {
+                this["MaxRecMO"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("99999")]
+        public string MaxRecSZ {
+            get {
+                return ((string)(this["MaxRecSZ"]));
+            }
+            set {
+                this["MaxRecSZ"] = value;
+            }
+        }
     }
 }

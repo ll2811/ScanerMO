@@ -20,8 +20,7 @@ using ICSharpCode.SharpZipLib.Zip;
 //using Microsoft.Win32;
 //using Microsoft.VisualBasic.FileIO;
 
-
-
+//test - ветка
 namespace Scaner
 {
     public partial class Form1 : Form
@@ -41,12 +40,12 @@ namespace Scaner
                             /*(10)*/"Активирована выгрузка из СРЗ персональных сведений ЗЛ",
                             /*(11)*/"Ошибка обработки.",
                             /*(12)*/"был обработан ранее.",
-                            /*(13)*/"не соответствует требованиям.",
-                            /*(14)*/"отсутствует в каталоге либо есть несоотвествие имени файла с именем архива.",
-                            /*(15)*/"не содержит информацию.",
+                            /*(13)*/"не соответствует требованиям норматива по количеству записей.",
+                            /*(14)*/"отсутствует в каталоге.",
+                            /*(15)*/"размера файла не соответствует минимальному значению(с учётом количества строк и обязательных сведений).",
                             /*(16)*/"недокументированная ошибка. Обратитесь к разработчику ПО.",
                             /*(17)*/"файл не был обработан из-за ошибки при вводе данных в БД",
-                            /*(18)*/"файл в записях содержит ошибки формата."};
+                            /*(18)*/"файл содержит ошибки не позволяющие его обработку."};
         //private enum FormMode {setting=1, protocol, tols}; //текущий режим формы
         //private byte formMode=1;            //текущий режим формы
         private int start;                  //
@@ -54,10 +53,12 @@ namespace Scaner
         private int takt;                   //
         //private static Guid g;              //ГУИД
         private bool flag = false;          //флаг выполнения опреации
-        
+
+        delegate string TextCallback(string text);
         delegate void SetTextCallback(string text);
         delegate string GetTextCallback();
         delegate void SetTextControlCallback(Button button, TaskInfo ti);
+
         private Thread WorkupThread = null;
         private Thread ScanerThread = null;
         private Thread SMOThread = null;
@@ -68,13 +69,17 @@ namespace Scaner
         private bool isExecHand_SMO;        //флаг обработки файлов
         private bool isExecHand_FSB;        //флаг обработки файлов
 
+        TestFile tf = new TestFile { };
+        Zip zp = new Zip { };
+        Utility ut = new Utility { };
         SkanFileInfo sf = new SkanFileInfo
         {
-            nameSrvSQL = "",
-            inpDir = "",
-            outDir = "",
-            arcDir = "",
-            arcInpDir = "",
+            nameSrvSQL = @"",
+            inpDir = @"",
+            outDir = @"",
+            arcDir = @"",
+            storageDepth = @"",
+            arcInpDir = @"",
             arcOutDir = @"",
             tmpDir = Environment.GetEnvironmentVariable("TEMP"),
             pathBCP = @"",
@@ -85,7 +90,8 @@ namespace Scaner
             errTest = ""
         };
 
-        public Form1() {
+        public Form1()
+        {
             InitializeComponent();
             //string s;// = System.Deployment.Application.ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
             //this.Text = "Сканер файлов по прикреплению ЗЛ к МО (" + Application.ProductVersion.ToString() + ").";
@@ -95,19 +101,24 @@ namespace Scaner
         {
             Text = "Сканер для СРЗ (версия " + System.Windows.Forms.Application.ProductVersion.ToString() + ")";
 
-            if (checkBox2.Checked) {
+            if (checkBox2.Checked)
+            {
                 ActivationScaner();
                 //FormMinimized();
             }
             WriteTextFile(this.textBox3.Text + @"scanlog.csv", string.Format("Запуск программы {0}(v{1}-{2}-{3})", DateTime.Now, System.Windows.Forms.Application.ProductVersion.ToString(), Environment.MachineName, Environment.UserName));
         }
-        private void Form1_FormClosed(object sender, FormClosedEventArgs e) {
+        private void Form1_FormClosed(object sender, FormClosedEventArgs e)
+        {
             Properties.Settings.Default.Save();
             WriteTextFile(this.textBox3.Text + @"scanlog.csv", string.Format("Закрытие программы {0}({1}-{2})", DateTime.Now, Environment.MachineName, Environment.UserName));
         }
-        private void Form1_FormClosing(object sender, FormClosingEventArgs e) {
-            if (isExecScaner | isExecHand | isExecHand_SMO | isExecHand_FSB) {
-                if (e.CloseReason == CloseReason.UserClosing) {
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (isExecScaner | isExecHand | isExecHand_SMO | isExecHand_FSB)
+            {
+                if (e.CloseReason == CloseReason.UserClosing)
+                {
                     e.Cancel = true;
                     if (isExecScaner)
                         MessageBox.Show("Сканер активирован. Выключите режим сканера и закройте программу!", "Внимание!", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
@@ -115,7 +126,8 @@ namespace Scaner
                         MessageBox.Show("Выполняется обработка данных. Дождитесь её завершения, а затем закройте программу!", "Внимание!", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 }
             }
-            if (altF4) {
+            if (altF4)
+            {
                 if (e.CloseReason == CloseReason.UserClosing)
                     e.Cancel = true;
                 altF4 = false;
@@ -136,7 +148,7 @@ namespace Scaner
             {
                 Hide(); // прячем форму
                 WindowState = FormWindowState.Minimized;
-                this.ShowInTaskbar = false;
+                ShowInTaskbar = false;
                 notifyIcon1.Visible = true;
                 if (isExecScaner)
                 {
@@ -158,209 +170,86 @@ namespace Scaner
         }
         private void NotifyIcon1_MouseClick(object sender, MouseEventArgs e)
         {
-            if (this.WindowState == FormWindowState.Minimized)
+            if (WindowState == FormWindowState.Minimized)
             {
                 Show(); // показываем форму
-                this.WindowState = FormWindowState.Normal;
-                this.ShowInTaskbar = true;
+                WindowState = FormWindowState.Normal;
+                ShowInTaskbar = true;
                 notifyIcon1.Visible = false;
             }
         }
-        private void SetLabel10(string text) {
-            // Если вызывающий поток отличается от потока, который создал элемент управления textbox,
+        private void SetLabel10(string text)
+        {   // Если вызывающий поток отличается от потока, который создал элемент управления textbox,
             // то этот метод создает SetTextCallback и вызывает себя асинхронно, используя метод invoke.
             // Если вызывающий поток аналогичен потоку, который создал элемент управления textbox свойство text устанавливается напрямую. 
             // Свойство InvokeRequired выполняет сравнение ID потоков, вызывающего потока и потока создавшим поток. Если потоки разные возвращает "истину".
-            if (this.label10.InvokeRequired) {
+            if (label10.InvokeRequired)
+            {
                 SetTextCallback d = new SetTextCallback(SetLabel10);
-                this.Invoke(d, new object[] { text });
-            }
-            else {
-                this.label10.Text = text;
-            }
-        }
-        private void SetTextBox6(string text) {
-            if (this.textBox6.InvokeRequired) {
-                SetTextCallback d = new SetTextCallback(SetTextBox6);
-                this.Invoke(d, new object[] { text });
-            }
-            else {
-                this.textBox6.AppendText(text + Environment.NewLine);
-                WriteTextFile(this.textBox3.Text + @"scanlog.csv", text);
-            }
-        }
-        private string GetComboBox1() {
-            if (this.comboBox1.InvokeRequired) {
-                GetTextCallback d = new GetTextCallback(GetComboBox1);
-                this.Invoke(d, new object[] { });
-                return this.comboBox1.Text;
-            }
-            else {
-                return this.comboBox1.Text;
-            }
-        }
-        private string GetComboBox2() {
-            if (this.comboBox2.InvokeRequired) {
-                GetTextCallback d = new GetTextCallback(GetComboBox2);
-                this.Invoke(d, new object[] { });
-                return this.comboBox2.Text;
-            }
-            else {
-                return this.comboBox2.Text;
-            }
-        }
-        private string GetComboBox3()
-        {
-            if (this.comboBox3.InvokeRequired) {
-                GetTextCallback d = new GetTextCallback(GetComboBox3);
-                this.Invoke(d, new object[] { });
-                return this.comboBox3.Text;
+                Invoke(d, new object[] { text });
             }
             else
             {
-                return this.comboBox3.Text;
+                label10.Text = text;
             }
         }
-        private void DisplayStatus(string Text) {
-             if (this.label10.InvokeRequired) {
-                SetTextCallback d = new SetTextCallback(DisplayStatus);
-                this.Invoke(d, new object[] { Text });
-            }
-            else {
-                this.label10.Text = this.label10.Text + Text;
-            }
-        }
-        private void UnZipFile(string lpFileName, string lpDirName) {
-            // если каталога нет, то создать - извлечь файл
-            using (ZipInputStream s = new ZipInputStream(System.IO.File.OpenRead(lpFileName))) {
-                ZipEntry theEntry;
-                while ((theEntry = s.GetNextEntry()) != null) {
-                    string fileName = lpFileName;
-
-                    if (!Directory.Exists(lpDirName))
-                        Directory.CreateDirectory(lpDirName);
-
-                    if (fileName != String.Empty) {
-                        if (System.IO.File.Exists(lpDirName + "\\" + theEntry.Name)) // если в каталоге есть файл - удалю
-                            System.IO.File.Delete(lpDirName + "\\" + theEntry.Name);
-
-                        using (System.IO.FileStream streamWriter = System.IO.File.Create(lpDirName + "\\" + theEntry.Name)) {
-                            int size = 2048;
-                            byte[] data = new byte[2048];
-                            while (true) {
-                                size = s.Read(data, 0, data.Length);
-                                if (size > 0) {
-                                    streamWriter.Write(data, 0, size);
-                                }
-                                else {
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Упаковать файл в каталог нахождения исходного файла
-        /// </summary>
-        /// <param name="InpFile"></param>
-        private void CreateZip(string InpFile)
-        {   // 1-если в каталоге есть аналог файла, удалить; 2-упаковать файл; 3-удалить исходный файл
-            string OutFile;
-            try
+        private void SetTextBox6(string text)
+        {
+            if (textBox6.InvokeRequired)
             {
-                OutFile = InpFile.Replace(Path.GetExtension(InpFile),".ZIP");
-                if (File.Exists(OutFile)) // если в каталоге есть файл - удалю
-                    File.Delete(OutFile);
-                using (ZipOutputStream s = new ZipOutputStream(System.IO.File.Create(OutFile)))
-                {
-                    s.SetLevel(9); // 0 - store only to 9 - means best compression
-                    byte[] buffer = new byte[4096];
-
-                    ZipEntry entry = new ZipEntry(Path.GetFileName(InpFile))
-                    {
-                        DateTime = DateTime.Now
-                    };
-                    s.UseZip64 = UseZip64.Off;
-                    s.PutNextEntry(entry);
-
-                    using (System.IO.FileStream fs = System.IO.File.OpenRead(InpFile))
-                    {
-                        // Using a fixed size buffer here makes no noticeable difference for output
-                        // but keeps a lid on memory usage.
-                        int sourceBytes;
-                        do
-                        {
-                            sourceBytes = fs.Read(buffer, 0, buffer.Length);
-                            s.Write(buffer, 0, sourceBytes);
-                        } while (sourceBytes > 0);
-                    }
-                    s.Finish();
-                    s.Close();
-                }
-                System.IO.File.Delete(InpFile);
+                SetTextCallback d = new SetTextCallback(SetTextBox6);
+                Invoke(d, new object[] { text });
             }
-            catch (Exception ex)
+            else
             {
-                //Console.WriteLine("Ошибка при создании архива {0}", ex);
-                this.SetTextBox6(string.Format("Ошибка при создании архива. (Ошибка: {0})", ex));
+                textBox6.AppendText(text + Environment.NewLine);
+                WriteTextFile(textBox3.Text + @"scanlog.csv", text);
             }
         }
-        
-        /// <summary>
-        /// Упаковать файл в каталог, отличный от каталога исходного файла
-        /// </summary>
-        /// <param name="InpFile"></param>
-        /// <param name="OutFile"></param>
-        private void CreateZip(string InpFile, string OutFile)
-        {   // 1-создать каталог, если его нет; 2-очистить каталог от аналога файла; 3-упаковать файл; 4-удалить исходный файл
-            if (!Directory.Exists(Path.GetDirectoryName(OutFile)))
-                Directory.CreateDirectory(Path.GetDirectoryName(OutFile));
-
-            // Упаковать zip-файл в папку
-            try
+        //private string GetComboBox1()
+        //{
+        //    if (comboBox1.InvokeRequired)
+        //    {
+        //        GetTextCallback d = new GetTextCallback(GetComboBox1);
+        //        Invoke(d, new object[] { });
+        //        return comboBox1.Text;
+        //    }
+        //    else
+        //    {
+        //        return comboBox1.Text;
+        //    }
+        //}
+        //private string GetComboBox2()
+        //{
+        //    if (comboBox2.InvokeRequired)
+        //    {
+        //        GetTextCallback d = new GetTextCallback(GetComboBox2);
+        //        Invoke(d, new object[] { });
+        //        return comboBox2.Text;
+        //    }
+        //    else
+        //    {
+        //        return comboBox2.Text;
+        //    }
+        //}
+        private string GetComboBox3()
+        {
+            if (comboBox3.InvokeRequired)
             {
-                if (File.Exists(OutFile)) // если в каталоге есть файл - удалю
-                    File.Delete(OutFile);
-                using (ZipOutputStream s = new ZipOutputStream(System.IO.File.Create(OutFile)))
-                {
-                    s.SetLevel(9); // 0 - store only to 9 - means best compression
-                    byte[] buffer = new byte[4096];
-
-                    ZipEntry entry = new ZipEntry(Path.GetFileName(InpFile))
-                    {
-                        DateTime = DateTime.Now
-                    };
-                    s.UseZip64 = UseZip64.Off;
-                    s.PutNextEntry(entry);
-
-                    using (System.IO.FileStream fs = System.IO.File.OpenRead(InpFile))
-                    {
-                        // Using a fixed size buffer here makes no noticeable difference for output
-                        // but keeps a lid on memory usage.
-                        int sourceBytes;
-                        do
-                        {
-                            sourceBytes = fs.Read(buffer, 0, buffer.Length);
-                            s.Write(buffer, 0, sourceBytes);
-                        } while (sourceBytes > 0);
-                    }
-                    s.Finish();
-                    s.Close();
-                }
-                System.IO.File.Delete(InpFile);
+                GetTextCallback d = new GetTextCallback(GetComboBox3);
+                Invoke(d, new object[] { });
+                return comboBox3.Text;
             }
-            catch (Exception ex) {
-                //Console.WriteLine("Ошибка при создании архива {0}", ex);
-                this.SetTextBox6(string.Format("Ошибка при создании архива. (Ошибка: {0})", ex));
+            else
+            {
+                return comboBox3.Text;
             }
         }
         private void RunCommandExtApp(string commandText, string argumentText)
         {// процедура выполнения внешнего приложения в синхронном режиме
             Process proc1 = new Process();
-            try {
+            try
+            {
                 proc1.StartInfo.CreateNoWindow = true;
                 proc1.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
                 proc1.StartInfo.FileName = commandText;
@@ -368,180 +257,86 @@ namespace Scaner
                 proc1.Start();
                 proc1.WaitForExit();
             }
-            catch (Win32Exception e) {
-                if (e.NativeErrorCode == ERROR_FILE_NOT_FOUND) {
-                    this.SetTextBox6(string.Format("Проверьте наличие файла.(Ошибка: {0})", e.Message));
-                }
-                else if (e.NativeErrorCode == ERROR_ACCESS_DENIED) {
-                    this.SetTextBox6(string.Format("Нет доступа к ресурсу.(Ошибка: {0})", e.Message));
-                }
+            catch (Win32Exception e)
+            {
+                if (e.NativeErrorCode == ERROR_FILE_NOT_FOUND) 
+                    SetTextBox6(string.Format("Проверьте наличие файла.(Ошибка: {0})", e.Message));
+                else if (e.NativeErrorCode == ERROR_ACCESS_DENIED)
+                    SetTextBox6(string.Format("Нет доступа к ресурсу.(Ошибка: {0})", e.Message));
             }
-            finally {
+            finally
+            {
                 proc1.Dispose();
             }
-        }
-        private void GetVersionMSSQL()
-        {   // процедура определения версии MSSQL
-            //RegistryView registryView = Environment.Is64BitOperatingSystem ? RegistryView.Registry64 : RegistryView.Registry32;
-            //using (RegistryKey hklm = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, registryView))
-            //{
-            //    RegistryKey instanceKey = hklm.OpenSubKey(@"SOFTWARE\Microsoft\Microsoft SQL Server\Instance Names\SQL", false);
-            //    if (instanceKey != null)
-            //    {
-            //        foreach (var instanceName in instanceKey.GetValueNames())
-            //        {
-            //            this.SetTextBox6(Environment.MachineName + @"" + instanceName);
-            //        }
-            //    }
-            //}
-
-            //ServiceController[] services = ServiceController.GetServices();
-            //foreach (ServiceController service in services)
-            //{
-            //    if (service.ServiceName.StartsWith("MSSQL", StringComparison.OrdinalIgnoreCase))
-            //    {
-            //string instanceName = service.ServiceName.Contains("$") ? service.ServiceName.Split('$')[1] : "";
-            //        instanceName.Dump();
-            //    }
-            //}
-        }
-        private string GetStorageDepth(string path)
-        {
-            string p = "";
-            switch (comboBox3.Text)
-            {
-            case "Год":
-                p = String.Join(@"\", path.Substring(9, 4), @"\");
-                break;
-            case "Месяц":
-                p = String.Join(@"\", path.Substring(9, 4), path.Substring(13, 2), @"\");
-                break;
-            case "День":
-                p = String.Join(@"\", path.Substring(9, 4), path.Substring(13, 2), path.Substring(15, 2), @"\");
-                break;
-            }
-            return p;
         }
         private string GetConnectionString()
         {   /* формирование строки подключения */
             //return "Data Source=" + sf.nameSrvSQL + ";Initial Catalog=PeopleAttach;Integrated Security=True;Asynchronous Processing=True";
             //return "Data Source=" + sf.nameSrvSQL + ";Initial Catalog=PeopleAttach;Integrated Security=True;Asynchronous Processing=True";
             //return global::VerificationAttachment.Properties.Settings.Default.ConnectDB;
-            //string strSQL = "Data Source=" + Properties.Settings.Default.NameSrvSQL + ";Initial Catalog=PeopleAttach;Integrated Security=True;Asynchronous Processing=True;applicationName=ScanSRZ";
-            return "Data Source=" + sf.nameSrvSQL + ";Initial Catalog=PeopleAttach;Integrated Security=True;Asynchronous Processing=True;applicationName=ScanSRZ";
+            //string strSQL = "Data Source=" + Properties.Settings.Default.NameSrvSQL + ";Initial Catalog=PeopleAttach;Integrated Security=True;Asynchronous Processing=True;Application Name=ScanSRZ";
+            return "Data Source=" + sf.nameSrvSQL + ";Initial Catalog=PeopleAttach;Integrated Security=True;Asynchronous Processing=True;Application Name=ScanSRZ";
         }
         private int GetIdRecordTbl(string queryString)
         {   // получить значение первого поля первой записи в таблице
-            Int32 id = 0;
+            int id = 0;
             string sql = queryString;
-            using (SqlConnection connection = new SqlConnection(GetConnectionString())) {
+            using (SqlConnection connection = new SqlConnection(GetConnectionString()))
+            {
                 SqlCommand cmd = new SqlCommand(sql, connection);
-                try {
-                    connection.Open();
-                    id = (Int32)cmd.ExecuteScalar();
-                }
-                catch (NullReferenceException) {
-                    this.SetLabel10("Получен новый файл! В указанной таблице нет записей удовлетворяющих условию запроса.");
-                }
-                catch (Exception ex) {
-                    this.SetTextBox6(string.Format("GetIdRecordTbl. Ошибка выполнения SQL-запроса {0}. (Ошибка: {1})", queryString, ex.Message));
-                }
-                finally {
-                    if (connection != null) connection.Close();
-                }
-            }
-            return (int)id;
-        }
-        /*
-        private int RunCommandSQL(string connectString, string queryString)
-        {   // процедура выполнения, в асинхронном режиме (версия 1)
-            SqlConnection connection = new SqlConnection(connectString);
-            SqlCommand command = new SqlCommand(queryString, connection);
-            try
-            {
-                int tk = Environment.TickCount;
-                connection.Open();
-                IAsyncResult result = command.BeginExecuteNonQuery(null, null);
-                while (!result.IsCompleted)
-                {
-                    System.Threading.Thread.Sleep(1000);    // ожидание 1 секунды 
-                    this.SetLabel10(string.Format("Обработка: {0}.", GetDate(Environment.TickCount - tk)));
-                }
-                command.EndExecuteNonQuery(result);
-                return 1;
-            }
-            catch (Exception ex)
-            {
-                this.SetTextBox6(string.Format("Ошибка выполнения SQL-запроса {0}. (Ошибка: {1})", queryString, ex.Message));
-                return 0;
-            }
-            finally
-            {
-                if (connection != null) connection.Close();
-                command.Dispose();
-            }
-        }
-
-        private void RunCommandSQL_2(string connectString, string queryString)
-        { // процедура выполнения, в асинхронном режиме (версия 2)
-            if (isExecutingSQL)
-            {
-                MessageBox.Show(this, "Уже выполняется. Пожалуйста, подождите, когда текущий запрос будет выполнен.");
-            }
-            else
-            {
-                SqlCommand command = null;
                 try
                 {
-                    isExecutingSQL = true;
-                    DisplayStatus("Подключение...");
-                    connection = new SqlConnection(connectString);
-                    command = new SqlCommand(queryString, connection);
                     connection.Open();
-                    DisplayStatus("Выполнение...");
-                    AsyncCallback callback = new AsyncCallback(HandleCallback);
-                    command.BeginExecuteNonQuery(callback, command);
+                    id = (int)cmd.ExecuteScalar();
+                }
+                catch (NullReferenceException)
+                {
+                    SetLabel10("Получен новый файл! В указанной таблице нет записей удовлетворяющих условию запроса.");
                 }
                 catch (Exception ex)
                 {
-                    isExecutingSQL = false;
-                    DisplayStatus(string.Format("Ready (last error: {0})", ex.Message));
-                    if (connection != null)
-                    {
-                        connection.Close();
-                    }
+                    SetTextBox6(string.Format("GetIdRecordTbl. Ошибка выполнения SQL-запроса {0}. (Ошибка: {1})", queryString, ex.Message));
+                }
+                finally
+                {
+                    if (connection != null) connection.Close();
                 }
             }
+            return id;
         }
-        */
         private async Task RunCommandSQL(string connectString, string queryString)
         {   // процедура выполнения, в асинхронном режиме (версия 3)
-            using (SqlConnection connection = new SqlConnection(connectString)) {
+            using (SqlConnection connection = new SqlConnection(connectString))
+            {
                 await connection.OpenAsync();
-                using (SqlCommand cmd = new SqlCommand(queryString, connection)) {
-                    try {
+                using (SqlCommand cmd = new SqlCommand(queryString, connection))
+                {
+                    try
+                    {
                         int _tk = Environment.TickCount;
                         //connection.Open();
                         IAsyncResult result = cmd.BeginExecuteNonQuery(null, null);
-                        while (!result.IsCompleted) {
+                        while (!result.IsCompleted)
+                        {
                             //System.Threading.Thread.Sleep(1000);    // ожидание 1 секунды 
                             Thread.CurrentThread.Join(1000);
-                            this.SetLabel10(string.Format("Обработка SQL-запроса: {0}.", GetDate(Environment.TickCount - _tk)));
+                            SetLabel10(string.Format("Обработка SQL-запроса: {0}.", GetDate(Environment.TickCount - _tk)));
                         }
                         cmd.EndExecuteNonQuery(result);
                         flag = true;
                     }
-                    catch (SqlException ex) {
-                        this.SetTextBox6(string.Format("RunCommandSQL. Ошибка выполнения SQL-запроса {0}. (Ошибка: ({1}): {2})", queryString, ex.Number, ex.Message));
+                    catch (SqlException ex)
+                    {
+                        SetTextBox6(string.Format("RunCommandSQL. Ошибка выполнения SQL-запроса {0}. (Ошибка: ({1}): {2})", queryString, ex.Number, ex.Message));
                         flag = false;
                     }
                     catch (InvalidOperationException ex)
                     {
-                        this.SetTextBox6(string.Format("Ошибка: {0}", ex.Message));
+                        SetTextBox6(string.Format("Ошибка: {0}", ex.Message));
                     }
                     catch (Exception ex)
                     {
-                        this.SetTextBox6(string.Format("Ошибка: {0}", ex.Message));
+                        SetTextBox6(string.Format("Ошибка: {0}", ex.Message));
                     }
                     finally
                     {
@@ -554,22 +349,28 @@ namespace Scaner
         private async Task StreamBLOBToServer(string PathInpFile, Guid g)
         {   //загрузка двоичного файла в SQL
             string query= "insert into DBO.MO_FS (id, FileName, FileSaver) values ('" + g + "','" + Path.GetFileName(PathInpFile.Replace("-", "")).ToUpper() + "', @bindata)";
-            using (SqlConnection connection = new SqlConnection(GetConnectionString())) {
+            using (SqlConnection connection = new SqlConnection(GetConnectionString()))
+            {
                 await connection.OpenAsync();
                 //using (SqlCommand cmd = new SqlCommand("insert into DBO.BinaryStreams (FileName, FileSaver) values ('" + Path.GetFileName(PathInpFile).ToUpper() + "', @bindata)", conn))
-                using (SqlCommand cmd = new SqlCommand(query, connection)) {
-                    try {
-                        using (FileStream file = File.Open(PathInpFile, FileMode.Open)) {
+                using (SqlCommand cmd = new SqlCommand(query, connection))
+                {
+                    try
+                    {
+                        using (FileStream file = File.Open(PathInpFile, FileMode.Open))
+                        {
                             cmd.Parameters.Add("@bindata", SqlDbType.Binary, -1).Value = file;
                             await cmd.ExecuteNonQueryAsync();
                             flag = true;
                         }
                     }
-                    catch (Exception ex) {
+                    catch (Exception ex)
+                    {
                         this.SetTextBox6(string.Format("StreamBLOBToServer. Ошибка записи данных в таблицу! {0}{1}", ex.Message, DateTime.Now));
                         flag = false;
                     }
-                    finally {
+                    finally
+                    {
                         //if (connection.State == System.Data.ConnectionState.Open) connection.Close();
                         if (connection != null)
                             connection.Close();
@@ -583,27 +384,36 @@ namespace Scaner
             string fn = Path.GetFileNameWithoutExtension(Path.GetFileName(PathInpFile));    //имя файла без расширения
             string query = "if Object_ID(N'PeopleAttach.dbo.tmp_EGIS', N'U') is not null drop table PeopleAttach.dbo.tmp_EGIS;";
             RunCommandSQL(GetConnectionString(), @query).Wait();
-            if (flag) {
+            if (flag)
+            {
                 query = "create table PeopleAttach.dbo.tmp_EGIS(csv nvarchar(max))";
                 RunCommandSQL(GetConnectionString(), @query).Wait();
-                if (flag) {
+                if (flag)
+                {
                     query = "insert into dbo.tmp_EGIS(csv) values(@" + fn + ")";     //SQL-запрос
-                    using (SqlConnection connection = new SqlConnection(GetConnectionString())) {
+                    using (SqlConnection connection = new SqlConnection(GetConnectionString()))
+                    {
                         await connection.OpenAsync();
-                        using (SqlCommand cmd = new SqlCommand(query, connection)) {
-                            try {
-                                using (StreamReader file = new StreamReader(PathInpFile, Encoding.Default)) {
+                        using (SqlCommand cmd = new SqlCommand(query, connection))
+                        {
+                            try
+                            {
+                                using (StreamReader file = new StreamReader(PathInpFile, Encoding.Default))
+                                {
                                     cmd.Parameters.Add("@" + fn + "", SqlDbType.NVarChar, -1).Value = file; //можно file.ReadToEnd()
                                     await cmd.ExecuteNonQueryAsync();
                                     flag = true;
                                 }
                             }
-                            catch (Exception ex) {
+                            catch (Exception ex)
+                            {
                                 SetTextBox6(string.Format("StreamTextToServer. Файл не был обработан из-за ошибки ввода данных в БД! {0}{1}", ex.Message, DateTime.Now));
                                 flag = false;
                             }
-                            finally {
-                                if (connection != null) connection.Close();
+                            finally
+                            {
+                                if (connection != null)
+                                    connection.Close();
                                 connection.Dispose();
                             }
                         }
@@ -618,11 +428,15 @@ namespace Scaner
             string field = (fe == ".xml") ? "FQ_xml" : "FQ_csv";                            //выбор поля
             string query = "insert into dbo.MO_FQ(id, NameFQ, " + field + ") values('" + g + "','" + Path.GetFileName(PathInpFile.Replace("-", "")).ToUpper() + "', @" + fn + ")";     //SQL-запрос
 
-            using (SqlConnection connection = new SqlConnection(GetConnectionString())) {
+            using (SqlConnection connection = new SqlConnection(GetConnectionString()))
+            {
                 await connection.OpenAsync();
-                using (SqlCommand cmd = new SqlCommand(query, connection)) {
-                    try {
-                        using (StreamReader file = new StreamReader(PathInpFile, Encoding.Default)) {
+                using (SqlCommand cmd = new SqlCommand(query, connection))
+                {
+                    try
+                    {
+                        using (StreamReader file = new StreamReader(PathInpFile, Encoding.Default))
+                        {
                             // Add a parameter which uses the StreamReader we just opened  (Добавим параметр, который использует StreamReader, который мы только что открыли)
                             // Size is set to -1 to indicate "MAX"  (Размер установлен в -1, чтобы указать "MAX")
                             cmd.Parameters.Add("@" + fn + "", (fe == "xml") ? SqlDbType.Xml : SqlDbType.NVarChar, -1).Value = file; //можно file.ReadToEnd()
@@ -630,13 +444,16 @@ namespace Scaner
                             flag = true;
                         }
                     }
-                    catch (Exception ex) {
+                    catch (Exception ex)
+                    {
                         SetTextBox6(string.Format("StreamTextToServer. Файл не был обработан из-за ошибки ввода данных в БД! {0}{1}", ex.Message, DateTime.Now));
                         flag = false;
                     }
-                    finally {
+                    finally
+                    {
                         //if (connection.State == System.Data.ConnectionState.Open) connection.Close();
-                        if (connection != null) connection.Close();
+                        if (connection != null)
+                            connection.Close();
                         connection.Dispose();
                     }
                 }
@@ -658,10 +475,8 @@ namespace Scaner
                 return true;
             }
         }
-
-        //тест файла
-        private byte StreamTestFail(int field, string listTest, byte[] p)
-        {//"field"-количество полей в строке; listTest-перечень тестов файла, разделённых символом  ","; p-массив с порядковыми номерами проверяемых полей
+        private byte StreamTestFile(int field, string listTest, byte[] p)
+        {//проверка файла. "field"-количество полей в строке; listTest-перечень тестов файла, разделённых символом  ","; p-массив с порядковыми номерами проверяемых полей
             byte sing = 0;      //флаг
             byte test = 0;      //битовые флаги выявленных ошибок
             sf.errNumber = 0;   //код ошибки обработки
@@ -789,7 +604,7 @@ namespace Scaner
                     else if ((sing & -16) > 0)
                     {
                         sf.errNumber = 18;
-                        sing = 0;
+                        sing = 1;
                     }
                 }
                 else
@@ -809,7 +624,7 @@ namespace Scaner
             {//сформировать файл выявленных ошибок ФЛК
                 string txt = "";
                 txt = string.Format("Файл: \"" + sf.fName + "\" содержит ошибки формата.\r\nКоличество ошибок: " + sf.errCount);
-                sf.fName = Path.Combine(sf.arcOutDir, @"err_" + Path.GetFileNameWithoutExtension(sf.fName) + @".txt"); //путь формирования файла со списком выявленных ошибок
+                sf.fName = Path.Combine(sf.arcOutDir, @"err_" + Path.GetFileNameWithoutExtension(sf.fName).Replace("MO", "E") + @".txt"); //путь формирования файла со списком выявленных ошибок
                 this.SetTextBox6(txt + "\r\nСписок ошибок будет выгружен в файл:\r\n\"" + sf.fName + "\", а также в каталог \"" + sf.outDir + "\" для отправки в МО.");
 
                 FileDelete(sf.fName);  //если есть файл - удалю
@@ -820,7 +635,7 @@ namespace Scaner
                 // + ((sf.errTest).Length > 100 ? sf.errTest.Remove(100) + "..." : sf.errTest))
                 File.AppendAllLines(sf.fName, lines, System.Text.Encoding.Default);
                 //WriteTextFile(sf.fName, sf.errTest);
-                FileCopy(sf.fName, Path.Combine(sf.outDir, Path.GetFileName(sf.fName)));
+                File.Copy(sf.fName, Path.Combine(sf.outDir, Path.GetFileName(sf.fName)), true);
             }
         }
         private void OwnedToMO_CSV(string PathOutFile, string NameTbl, string FieldList)
@@ -828,15 +643,17 @@ namespace Scaner
             if (File.Exists(PathOutFile)) File.Delete(PathOutFile);
 
             string query;   //запрос
-            Int32 rowcnt;   //кол-во строк в таблице
-            Int32 sizeTbl;  //объём данных в байтах + 2байта(/r/n) на строку
+            int rowcnt;   //кол-во строк в таблице
+            int sizeTbl;  //объём данных в байтах + 2байта(/r/n) на строку
 
             StreamWriter file = new StreamWriter(PathOutFile, false, Encoding.GetEncoding("windows-1251"));
             double Ffree = new DriveInfo(new DriveInfo(PathOutFile).RootDirectory.ToString()).AvailableFreeSpace;
             //double Ffree = new DriveInfo(new DriveInfo(PathOutFile).ToString()).AvailableFreeSpace;
 
-            using (SqlConnection connection = new SqlConnection(GetConnectionString())) {
-                try {
+            using (SqlConnection connection = new SqlConnection(GetConnectionString()))
+            {
+                try
+                {
                     int _tk = Environment.TickCount;
                     //определю предпологаемый размер выгрузки
                     query = "select count(*) n, sum(len([txt])) s from PeopleAttach.dbo." + NameTbl + ";";
@@ -846,11 +663,11 @@ namespace Scaner
                     SQLreader.Read();
                     //Console.WriteLine("row: {0}, size: {1}", SQLreader.GetValue(0).ToString(), SQLreader.GetValue(1).ToString());
                     rowcnt = SQLreader.GetInt32(0);
-                    sizeTbl = (rowcnt * 2) + SQLreader.GetInt32(1);    
+                    sizeTbl = (rowcnt * 2) + SQLreader.GetInt32(1);
                     SQLreader.Close();
                     connection.Close();
 
-                    this.SetLabel10(string.Format("Выгрузка данных: {0}.", GetDate(Environment.TickCount - _tk)));
+                    this.SetLabel10(string.Format("Выполняется выгрузка: {0}.", GetDate(Environment.TickCount - _tk)));
                     if (sizeTbl < Ffree)    //если мало места - выгрузки нет
                     {
                         Int32 k = 1;
@@ -884,8 +701,10 @@ namespace Scaner
                         }
                         else
                         {
-                            if (SQLreader != null) SQLreader.Close();
-                            if (connection != null) connection.Close();
+                            if (SQLreader != null)
+                                SQLreader.Close();
+                            if (connection != null)
+                                connection.Close();
                             query = "select txt from PeopleAttach.dbo." + NameTbl + ";";
                             command = new SqlCommand(query, connection);
                             connection.Open();
@@ -907,7 +726,7 @@ namespace Scaner
                         }
                     }
                     else
-                        this.SetTextBox6(string.Format(errList[2] + " {0}", DateTime.Now));
+                        SetTextBox6(string.Format(errList[2] + " {0}", DateTime.Now));
                 }
                 catch (Exception ex)
                 {
@@ -929,35 +748,43 @@ namespace Scaner
         }
         private void ThreadProcSafe_1()
         {   //обработка файлов. метод выполняется в фоновом потоке
-            sf.inpDir = this.textBox1.Text;
-            sf.outDir = this.textBox2.Text;
-            sf.arcDir = this.textBox3.Text;
-            sf.arcInpDir = this.textBox3.Text + @"Inp\";
-            sf.arcOutDir = this.textBox3.Text + @"Out\";
+            sf.inpDir = textBox1.Text;
+            sf.outDir = textBox2.Text;
+            sf.arcDir = textBox3.Text;
+            sf.arcInpDir = "";
+            sf.arcOutDir = "";
+            sf.storageDepth = Properties.Settings.Default.Storage_Depth; 
+//            sf.storageDepth = GetComboBox3();  
             sf.tmpDir = Environment.GetEnvironmentVariable("TEMP");
-            sf.nameSrvSQL = this.textBox4.Text;
-            sf.pathBCP = @"" + this.textBox5.Text + @"";
+            sf.nameSrvSQL = textBox4.Text;
+            sf.pathBCP = @"" + textBox5.Text + @"";
 
-            if (!Directory.Exists(sf.inpDir)) {
-                this.SetTextBox6(string.Format(errList[0] + " {0}", DateTime.Now));
+            if (!Directory.Exists(sf.inpDir))
+            {
+                SetTextBox6(string.Format(errList[0] + " {0}", DateTime.Now));
                 return;
             }
-            if (isExecHand) {
-                this.SetTextBox6(string.Format(errList[1] + " {0}", DateTime.Now));
+            if (isExecHand)
+            {
+                SetTextBox6(string.Format(errList[1] + " {0}", DateTime.Now));
             }
-            else {
-                try {
+            else
+            {
+                try
+                {
                     isExecHand = true;  //блокировка запуска потока
-                    this.SetLabel10("Проверка наличия файлов.");
+                    SetLabel10("Проверка наличия файлов.");
 
                     string[] zipList = Directory.GetFiles(sf.inpDir, "*");
-                    if (zipList.Length > 0) {   //проверка доступности каталога
-                        this.notifyIcon1.Icon = Properties.Resources.Icon4;
+                    if (zipList.Length > 0)
+                    {   //проверка доступности каталога
+                        notifyIcon1.Icon = Properties.Resources.Icon4;
 
                         /*------------------------------------- обработка файлов от МО. тип-"MO"  -----------------------------------*/
                         /* запрос на прикрепление ЗЛ к МО    */
-                        zipList = Directory.GetFiles(sf.inpDir, "mo2??????????????.csv");
-                        foreach (string f in zipList) {
+                        zipList = Directory.GetFiles(sf.inpDir, "mo???????????????.csv");
+                        foreach (string f in zipList)
+                        {
                             ScanMO(f/*, sf*/);
                          }
                         /*------------------------------------- обработка файлов от СМО. тип-"PZ" -----------------------------------*/
@@ -968,7 +795,7 @@ namespace Scaner
                         }
                         /*------------------------------------- обработка файлов от МО. тип-"SZ" ------------------------------------*/
                         /* сверка прикрепления ЗЛ к МО по предоставленному МО списку ЗЛ */
-                        zipList = Directory.GetFiles(sf.inpDir, "sz2??????????????.zip");
+                        zipList = Directory.GetFiles(sf.inpDir, "sz???????????????.zip");
                         foreach (string f in zipList) {
                             ScanSZ(f/*, sf*/);
                         }
@@ -979,18 +806,20 @@ namespace Scaner
                         {
                             ScanMED_DR(f/*, sf*/);
                         }
-                        this.notifyIcon1.Icon = Properties.Resources.Icon1;
+                        notifyIcon1.Icon = Properties.Resources.Icon1;
                     }
                     else
-                        this.SetLabel10("Файлов для обработки нет!");
+                        SetLabel10("Файлов для обработки нет!");
                 }
-                catch (Exception ex) {
-                    this.SetTextBox6(string.Format(errList[11] + " {0}", ex.Message));
+                catch (Exception ex)
+                {
+                    SetTextBox6(string.Format(errList[11] + " {0}", ex.Message));
                     //if (connection != null) connection.Close();
                 }
-                finally {
+                finally
+                {
                     isExecHand = false;
-                    this.SetLabel10("Ожидание запуска.");
+                    SetLabel10("Ожидание запуска.");
                 }
             }
         }
@@ -1002,127 +831,137 @@ namespace Scaner
             Guid g;     // ид файла
             int i;      // кол-во сформированных откреплений
             string txt = ""; //
+            int maxrec = Convert.ToInt16(this.textBox8.Text);
 
             sf.fName = Path.GetFileName(f.ToUpper());   //имя файла обрабатываемого прикрепления
-            //sf.arcInpDir = this.textBox3.Text + @"Inp\" + String.Join(@"\", sf.fName.Substring(9, 4), sf.fName.Substring(13, 2), sf.fName.Substring(15, 2), @"\");  //склад - полученные файлы
-            sf.arcInpDir = this.textBox3.Text + @"Inp\" + GetStorageDepth(sf.fName);  //склад - полученные файлы
-            if (!Directory.Exists(sf.arcInpDir))
-                Directory.CreateDirectory(sf.arcInpDir);
+            txt = sf.fName.Substring(2, 1);
+            if (txt == "1" | txt == "2") {
+                txt = "";
+                //sf.arcInpDir = this.textBox3.Text + @"Inp\" + String.Join(@"\", sf.fName.Substring(9, 4), sf.fName.Substring(13, 2), sf.fName.Substring(15, 2), @"\");  //склад - полученные файлы
+                sf.arcInpDir = sf.arcDir + @"Inp\" + ut.GetStorageDepth(sf.fName, sf.storageDepth);  //склад - полученные файлы
+                if (!Directory.Exists(sf.arcInpDir))
+                    Directory.CreateDirectory(sf.arcInpDir);    //сделаю папку, если такой нет
 
-            //sf.arcOutDir = this.textBox3.Text + @"Out\" + String.Join(@"\", sf.fName.Substring(9, 4), sf.fName.Substring(13, 2), sf.fName.Substring(15, 2), @"\");  //склад - ответные файлы 
-            sf.arcOutDir = this.textBox3.Text + @"Out\" + GetStorageDepth(sf.fName);  //склад - ответные файлы 
-            if (!Directory.Exists(sf.arcOutDir))
-                Directory.CreateDirectory(sf.arcOutDir);
+                //sf.arcOutDir = this.textBox3.Text + @"Out\" + String.Join(@"\", sf.fName.Substring(9, 4), sf.fName.Substring(13, 2), sf.fName.Substring(15, 2), @"\");  //склад - ответные файлы 
+                sf.arcOutDir = sf.arcDir + @"Out\" + ut.GetStorageDepth(sf.fName, sf.storageDepth);  //склад - ответные файлы 
+                if (!Directory.Exists(sf.arcOutDir))
+                    Directory.CreateDirectory(sf.arcOutDir);    //сделаю папку, если такой нет
 
-            FileMove(f, Path.Combine(sf.tmpDir, sf.fName)); //перенесу в tmpDir
+                FileMove(f, Path.Combine(sf.tmpDir, sf.fName)); //перенесу в tmpDir
 
-            if (StreamTestFail(25, "1,2,3,4,5,6", new byte[] { 1, 2, 3, 6, 7, 9, 16, 17, 19, 21, 23, 24, 25 }) == 0) //проверка - корректность формата
-            {   //корректный формат
-                sf.argsStr = "select top 1 id from PolicyRegister.dbo.MO_LOG where fname='" + sf.fName + "' order by dt desc";   //запрос-проверка обработки файла ранее
-                if (GetIdRecordTbl(@sf.argsStr) == 0) //проверка обработки
-                {
-                    sf.argsStr = "if exists (select 1 from dbo.MO_FS where FileName='" + sf.fName + "') delete from dbo.MO_FS where FileName='" + sf.fName + "';";   //запрос-если обработка повторна - удалю запись об файле
-                    RunCommandSQL(GetConnectionString(), @sf.argsStr).Wait();
-                    if (flag)
-                    {   //новый файл
-                        tk = Environment.TickCount;
-                        this.SetTextBox6(string.Format("Получен файл: {0}: в {1}", sf.fName, DateTime.Now));
-                        g = Guid.NewGuid(); // определю GUIDs для файла.
-                        sf.argsStr = "insert into dbo.MO_FS (id, FileName) values ('" + g + "','" + sf.fName + "')";   //вставить запись о файле
-                        RunCommandSQL(GetConnectionString(), sf.argsStr).Wait();
+                //if (StreamTestFile(25, "1,2,3,4,5,6", new byte[] { 1, 2, 3, 6, 7, 9, 16, 17, 19, 21, 22, 24, 25 }) == 0) //проверка - корректность формата
+                if (tf.TestFileCSV(sf, maxrec, 730,25, "1,2,3,4,5,6,7,8,9,10", new byte[] { 1, 2, 3, 6, 7, 9, 16, 17, 19, 21, 22, 24, 25 }) == 0)   //проверка файла на корректность
+                {   //корректный формат
+                    sf.argsStr = "select top 1 id from PolicyRegister.dbo.MO_LOG where fname='" + sf.fName + "' order by dt desc";   //запрос-проверка обработки файла ранее
+                    if (GetIdRecordTbl(@sf.argsStr) == 0) //проверка обработки
+                    {
+                        sf.argsStr = "if exists (select 1 from dbo.MO_FS where FileName='" + sf.fName + "' and status=0) delete from dbo.MO_FS where FileName='" + sf.fName + "';";   //запрос-если обработка повторна - удалю запись об файле
+                        RunCommandSQL(GetConnectionString(), @sf.argsStr).Wait();
                         if (flag)
-                        {
-                            StreamTextToServer(Path.Combine(sf.tmpDir, sf.fName), g).Wait();   //загружу в таблицу БД
+                        {   //новый файл
+                            tk = Environment.TickCount;
+                            SetTextBox6(string.Format("Получен файл: {0}: в {1}", sf.fName, DateTime.Now));
+                            g = Guid.NewGuid(); // определю GUIDs для файла.
+                            sf.argsStr = "insert into dbo.MO_FS (id, FileName) values ('" + g + "','" + sf.fName + "')";   //вставить запись о файле
+                            RunCommandSQL(GetConnectionString(), sf.argsStr).Wait();
                             if (flag)
-                            {   //если загрузка в таблицу выполнилась корректно
-                                sf.fNameArc = sf.fName.Replace(".CSV", ".ZIP");   //имя текущего архива
-                                CreateZip(Path.Combine(sf.tmpDir, sf.fName), Path.Combine(sf.arcInpDir, sf.fNameArc));   //упакую и перенесу в каталог arcInpDir
-
-                                //обработка файла МО
-                                sf.argsStr = "exec dbo.sp_FileProcess_mo_1 '" + @f + "', 2, '" + g + "'";   //запрос для обработки файла
-                                RunCommandSQL(GetConnectionString(), @sf.argsStr).Wait(); //обработка
+                            {
+                                StreamTextToServer(Path.Combine(sf.tmpDir, sf.fName), g).Wait();   //загружу в таблицу БД
                                 if (flag)
-                                {   //если обработка выполнена корректно
-                                    //StreamBLOBToServer(Path.Combine(sf.arcInpDir, sf.fNameArc), g).Wait();   //сохраню обработанный файл в FileStreams БД
-                                    //выгрузка протокола
-                                    sf.fName = sf.fName.Replace("MO", "E");   //рабочее имя файла протокола
-                                    OwnedToMO_CSV(Path.Combine(sf.tmpDir, sf.fName), "tmp_mof", ""); //выгрузка протокола
+                                {   //если загрузка в таблицу выполнилась корректно
+                                    sf.fNameArc = sf.fName.Replace(".CSV", ".ZIP");   //имя текущего архива
+                                    zp.CreateZip(Path.Combine(sf.tmpDir, sf.fName), Path.Combine(sf.arcInpDir, sf.fNameArc));   //упакую и перенесу в каталог arcInpDir
 
-                                    sf.fNameArc = sf.fName.Replace(".CSV", ".ZIP");   //рабочее имя архива протокола
-                                    CreateZip(Path.Combine(sf.tmpDir, sf.fName), Path.Combine(sf.arcOutDir, sf.fNameArc));
-                                    FileCopy(Path.Combine(sf.arcOutDir, sf.fNameArc), Path.Combine(sf.outDir, sf.fNameArc));
+                                    //обработка файла МО
+                                    sf.argsStr = "exec dbo.sp_FileProcess_mo_1 '" + @f + "', 2, '" + g + "'";   //запрос для обработки файла
+                                    RunCommandSQL(GetConnectionString(), @sf.argsStr).Wait(); //обработка
+                                    if (flag)
+                                    {   //если обработка выполнена корректно
+                                        //StreamBLOBToServer(Path.Combine(sf.arcInpDir, sf.fNameArc), g).Wait();   //сохраню обработанный файл в FileStreams БД
+                                        //выгрузка протокола
+                                        sf.fName = sf.fName.Replace("MO", "E");   //рабочее имя файла протокола
+                                        OwnedToMO_CSV(Path.Combine(sf.tmpDir, sf.fName), "tmp_mof", ""); //выгрузка протокола
 
-                                    //выгрузка откреплений
-                                    sf.argsStr = "select top 1 id from [policyregister].[dbo].[mo_log] where fname = '" + Path.GetFileName(f) + "' order by id desc";  //запрос-для определения номера файла
-                                    id = GetIdRecordTbl(@sf.argsStr);  //получу номер файла
-                                    if (id > 0)
-                                    {
-                                        sf.argsStr = "insert PeopleAttach.dbo.MO_LOG_STATUS(id, dt, status) values(" + id + ", getdate(), 1);"; //запрос-признак выполнения выгрузки протокола
-                                        GetIdRecordTbl(@sf.argsStr);
+                                        sf.fNameArc = sf.fName.Replace(".CSV", ".ZIP");   //рабочее имя архива протокола
+                                        zp.CreateZip(Path.Combine(sf.tmpDir, sf.fName), Path.Combine(sf.arcOutDir, sf.fNameArc));
+                                        FileCopy(Path.Combine(sf.arcOutDir, sf.fNameArc), Path.Combine(sf.outDir, sf.fNameArc));
 
-                                        mo = Path.GetFileName(f).Substring(3, 6); // код МО
-                                                                                  //запрос-определения списка МО для формирования файлов открепления
-                                        string sql = "select [mo], count(*) as [num] from [PeopleAttach]..[MO_LOG_OUT_REC_ATTACH] where [id] = " + id + " and [status]=1 and [mo]<>'" + mo + "' and [mo] not in (select code from [PolicyRegister].[dbo].[LPU] where [dendfix]<getdate() or [AGELPU]>3) group by [mo]";
-                                        using (SqlConnection conn = new SqlConnection(GetConnectionString()))
+                                        //выгрузка откреплений
+                                        sf.argsStr = "select top 1 id from [policyregister].[dbo].[mo_log] where fname = '" + Path.GetFileName(f) + "' order by id desc";  //запрос-для определения номера файла
+                                        id = GetIdRecordTbl(@sf.argsStr);  //получу номер файла
+                                        if (id > 0)
                                         {
-                                            SqlCommand cmd = new SqlCommand(sql, conn);
-                                            try
+                                            sf.argsStr = "insert PeopleAttach.dbo.MO_LOG_STATUS(id, dt, status) values(" + id + ", getdate(), 1);"; //запрос-признак выполнения выгрузки протокола
+                                            GetIdRecordTbl(@sf.argsStr);
+
+                                            mo = Path.GetFileName(f).Substring(3, 6); // код МО
+                                                                                      //запрос-определения списка МО для формирования файлов открепления
+                                            string sql = "select [mo], count(*) as [num] from [PeopleAttach]..[MO_LOG_OUT_REC_ATTACH] where [id] = " + id + " and [status]=1 and [mo]<>'" + mo + "' and [mo] not in (select code from [PolicyRegister].[dbo].[LPU] where [dendfix]<getdate() or [AGELPU]>3) group by [mo]";
+                                            using (SqlConnection conn = new SqlConnection(GetConnectionString()))
                                             {
-                                                conn.Open();
-                                                SqlDataReader reader = cmd.ExecuteReader();
-                                                if (reader.HasRows)
+                                                SqlCommand cmd = new SqlCommand(sql, conn);
+                                                try
                                                 {
-                                                    i = 0;
-                                                    while (reader.Read())
+                                                    conn.Open();
+                                                    SqlDataReader reader = cmd.ExecuteReader();
+                                                    if (reader.HasRows)
                                                     {
-                                                        //this.SetTextBox6(string.Format("Откреплено от МО: {0}. Кол-во: {1}", reader.GetValue(0).ToString(), reader.GetValue(1).ToString()));
-                                                        sf.argsStr = "exec dbo.sp_FileProcess_mo_2 " + id + ",'" + reader.GetValue(0).ToString() + "'";   //запрос-обработка
-                                                        RunCommandSQL(GetConnectionString(), @sf.argsStr).Wait(); //обработка файла
-                                                        if (flag)
-                                                        {   // если обработка выполнена, выгружу открепление
-                                                            sf.argsStr = "select FileNum from PeopleAttach.dbo.MO_FILE_STATIST where MO = " + reader.GetValue(0).ToString() + " and FileYear = year(getdate())";  //запрос получения номера файла открепления
-                                                            int k = (int)GetIdRecordTbl(@sf.argsStr);
-                                                            if (k == 0)
-                                                            { //запрос-вставка инф-ция по файлу открепления
-                                                                sf.argsStr = "insert into PeopleAttach.dbo.MO_FILE_STATIST(MO,FileYear,FileNum) values(" + reader.GetValue(0).ToString() + ",year(getdate()),1);" +
-                                                                    "select FileNum from PeopleAttach.dbo.MO_FILE_STATIST where MO = " + reader.GetValue(0).ToString() + " and FileYear = year(getdate())";
-                                                            }
-                                                            else
-                                                            { //запрос-обновить инф-цию по файлу открепления
-                                                                sf.argsStr = "update PeopleAttach.dbo.MO_FILE_STATIST set FileNum = FileNum + 1 where MO = " + reader.GetValue(0).ToString() + " and FileYear = year(getdate());" +
-                                                                    "select FileNum from PeopleAttach.dbo.MO_FILE_STATIST where MO = " + reader.GetValue(0).ToString() + " and FileYear = year(getdate())";
-                                                            }
+                                                        i = 0;
+                                                        while (reader.Read())
+                                                        {
+                                                            //this.SetTextBox6(string.Format("Откреплено от МО: {0}. Кол-во: {1}", reader.GetValue(0).ToString(), reader.GetValue(1).ToString()));
+                                                            sf.argsStr = "exec dbo.sp_FileProcess_mo_2 " + id + ",'" + reader.GetValue(0).ToString() + "'";   //запрос-обработка
+                                                            RunCommandSQL(GetConnectionString(), @sf.argsStr).Wait(); //обработка файла
+                                                            if (flag)
+                                                            {   // если обработка выполнена, выгружу открепление
+                                                                sf.argsStr = "select FileNum from PeopleAttach.dbo.MO_FILE_STATIST where MO = " + reader.GetValue(0).ToString() + " and FileYear = year(getdate())";  //запрос получения номера файла открепления
+                                                                int k = GetIdRecordTbl(@sf.argsStr);
+                                                                if (k == 0)
+                                                                { //запрос-вставка инф-ция по файлу открепления
+                                                                    sf.argsStr = "insert into PeopleAttach.dbo.MO_FILE_STATIST(MO,FileYear,FileNum) values(" + reader.GetValue(0).ToString() + ",year(getdate()),1);" +
+                                                                        "select FileNum from PeopleAttach.dbo.MO_FILE_STATIST where MO = " + reader.GetValue(0).ToString() + " and FileYear = year(getdate())";
+                                                                }
+                                                                else
+                                                                { //запрос-обновить инф-цию по файлу открепления
+                                                                    sf.argsStr = "update PeopleAttach.dbo.MO_FILE_STATIST set FileNum = FileNum + 1 where MO = " + reader.GetValue(0).ToString() + " and FileYear = year(getdate());" +
+                                                                        "select FileNum from PeopleAttach.dbo.MO_FILE_STATIST where MO = " + reader.GetValue(0).ToString() + " and FileYear = year(getdate())";
+                                                                }
 
-                                                            sf.fName = @"O2" + reader.GetValue(0).ToString() + DateTime.Now.ToString("yyyyMMdd") + GetIdRecordTbl(@sf.argsStr).ToString() + @".CSV"; //сформирую имя файла открепления
-                                                            OwnedToMO_CSV(Path.Combine(sf.tmpDir, sf.fName), "tmp_mof", "");
+                                                                sf.fName = @"O2" + reader.GetValue(0).ToString() + DateTime.Now.ToString("yyyyMMdd") + GetIdRecordTbl(@sf.argsStr).ToString() + @".CSV"; //сформирую имя файла открепления
+                                                                OwnedToMO_CSV(Path.Combine(sf.tmpDir, sf.fName), "tmp_mof", "");
 
-                                                            sf.fNameArc = sf.fName.Replace(".CSV", ".ZIP");   //определю имя архива
-                                                            FileDelete(Path.Combine(sf.arcOutDir, sf.fNameArc));  //если есть файл - удалю
-                                                            CreateZip(Path.Combine(sf.tmpDir, sf.fName), Path.Combine(sf.arcOutDir, sf.fNameArc));   //упакую
-                                                            FileDelete(Path.Combine(sf.outDir, sf.fNameArc));  //если в есть файл - удалю
-                                                            File.Copy(Path.Combine(sf.arcOutDir, sf.fNameArc), Path.Combine(sf.outDir, sf.fNameArc)); //копирую из arcOutDir в outDir
-                                                            i += reader.GetInt32(1);
+                                                                sf.fNameArc = sf.fName.Replace(".CSV", ".ZIP");   //определю имя архива
+                                                                FileDelete(Path.Combine(sf.arcOutDir, sf.fNameArc));  //если есть файл - удалю
+                                                                zp.CreateZip(Path.Combine(sf.tmpDir, sf.fName), Path.Combine(sf.arcOutDir, sf.fNameArc));   //упакую
+                                                                FileDelete(Path.Combine(sf.outDir, sf.fNameArc));  //если в есть файл - удалю
+                                                                File.Copy(Path.Combine(sf.arcOutDir, sf.fNameArc), Path.Combine(sf.outDir, sf.fNameArc)); //копирую из arcOutDir в outDir
+                                                                i += reader.GetInt32(1);
+                                                            }
                                                         }
+                                                        this.SetTextBox6(string.Format("Кол-во сформированных откреплений ЗЛ от МО: {0}", i));
                                                     }
-                                                    this.SetTextBox6(string.Format("Кол-во сформированных откреплений ЗЛ от МО: {0}", i));
+                                                    reader.Close();
                                                 }
-                                                reader.Close();
-                                            }
-                                            catch (Exception ex)
-                                            {
-                                                this.SetTextBox6(ex.Message);
+                                                catch (Exception ex)
+                                                {
+                                                    SetTextBox6(ex.Message);
+                                                }
                                             }
                                         }
+                                        SetTextBox6(string.Format("Время обработки: ({0})", GetDate(Environment.TickCount - tk)));
                                     }
-                                    this.SetTextBox6(string.Format("Время обработки: ({0})", GetDate(Environment.TickCount - tk)));
+                                    else
+                                    {   //если обработка выполнена некорректно
+                                        sf.fName = Path.GetFileName(f.ToUpper()).Replace("MO", "E");
+                                        sf.fNameArc = sf.fNameArc.Replace(".CSV", ".ZIP");
+                                        OwnedToMO_CSV(Path.Combine(sf.tmpDir, sf.fName), "tmp_mof", "");
+                                        zp.CreateZip(Path.Combine(sf.tmpDir, sf.fName), Path.Combine(sf.arcOutDir, sf.fNameArc));
+                                        FileCopy(Path.Combine(sf.arcOutDir, sf.fNameArc), Path.Combine(sf.outDir, sf.fNameArc));
+                                    }
                                 }
                                 else
-                                {   //если обработка выполнена некорректно
-                                    sf.fName = Path.GetFileName(f.ToUpper()).Replace("MO", "E");
-                                    sf.fNameArc = sf.fNameArc.Replace(".CSV", ".ZIP");
-                                    OwnedToMO_CSV(Path.Combine(sf.tmpDir, sf.fName), "tmp_mof", "");
-                                    CreateZip(Path.Combine(sf.tmpDir, sf.fName), Path.Combine(sf.arcOutDir, sf.fNameArc));
-                                    FileCopy(Path.Combine(sf.arcOutDir, sf.fNameArc), Path.Combine(sf.outDir, sf.fNameArc));
+                                {   //ошибки ввода данных в БД
+                                    txt = string.Format(errList[11] + " Файл: \"" + Path.GetFileName(f) + "\" " + errList[17] + ", " + errList[16]);
                                 }
                             }
                             else
@@ -1130,93 +969,83 @@ namespace Scaner
                                 txt = string.Format(errList[11] + " Файл: \"" + Path.GetFileName(f) + "\" " + errList[17] + ", " + errList[16]);
                             }
                         }
-                        else
-                        {   //ошибки ввода данных в БД
-                            txt = string.Format(errList[11] + " Файл: \"" + Path.GetFileName(f) + "\" " + errList[17] + ", " + errList[16]);
-                        }
+                    }
+                    else
+                    {   //повторный файл, сформирую описание ошибки
+                        txt = string.Format(errList[11] + " Файл: \"" + Path.GetFileName(f) + "\" " + errList[12]);
                     }
                 }
                 else
-                {   //повторный файл, сформирую описание ошибки
-                    txt = string.Format(errList[11] + " Файл: \"" + Path.GetFileName(f) + "\" " + errList[12]);
+                {   //некорректный формат, сформирую описание ошибки
+                    txt = sf.errTxt;    // string.Format(errList[11] + " Файл: \"" + Path.GetFileName(f) + "\" " + errList[13] + ". Кол-во ошибок: " + sf.errCount + ". Список ошибок(код/строка): " + ((sf.errTest).Length > 100 ? sf.errTest.Remove(100) + "..." : sf.errTest));
+                                        //FileDelete(Path.Combine(sf.tmpDir, Path.GetFileName(sf.fName)));  //если есть файл - удалю
+                }
+                if (txt != "")
+                {
+                    SetTextBox6(txt);
+                    if (File.Exists(Path.Combine(sf.tmpDir, sf.fName)))
+                        zp.CreateZip(Path.Combine(sf.tmpDir, sf.fName), Path.Combine(sf.arcInpDir, sf.fName.Replace(".CSV", ".ZIP")));   //упакую файл и перенесу в каталог arcInpDir
+                    if (sf.errCount == 0)
+                    {
+                        sf.fName = Path.Combine(Path.GetDirectoryName(sf.fName), Path.GetFileName(sf.fName).Replace("MO", "E"));     //имя протокола ответа
+                        WriteTextFile(Path.Combine(sf.arcOutDir, sf.fName), txt);   //сформирую ответ в МО
+                        zp.CreateZip(Path.Combine(sf.arcOutDir, sf.fName));
+                        sf.fNameArc = sf.fName.Replace(".CSV", ".ZIP");
+                        FileCopy(Path.Combine(sf.arcOutDir, sf.fNameArc), Path.Combine(sf.outDir, sf.fNameArc));
+                    }
                 }
             }
-            else
-            {   //некорректный формат, сформирую описание ошибки
-                txt = string.Format(errList[11] + " Файл: \"" + Path.GetFileName(f) + "\" " + errList[13] + ". Кол-во ошибок: " + sf.errCount + ". Список ошибок(код/строка): " + ((sf.errTest).Length > 100 ? sf.errTest.Remove(100) + "..." : sf.errTest));
-            }
-            if (txt != "") 
-            {
-                if (File.Exists(Path.Combine(sf.tmpDir, sf.fName)))
-                    CreateZip(Path.Combine(sf.tmpDir, sf.fName), Path.Combine(sf.arcInpDir, sf.fName.Replace(".CSV", ".ZIP")));   //упакую файл и перенесу в каталог arcInpDir
-                this.SetTextBox6(txt);
-                sf.fName = sf.fName.Replace("MO", "E");     //имя протокола ответа
-                WriteTextFile(Path.Combine(sf.arcOutDir, sf.fName), txt);   //сформирую ответ в МО
-                CreateZip(Path.Combine(sf.arcOutDir, sf.fName));
-                sf.fNameArc = sf.fName.Replace(".CSV", ".ZIP");
-                FileCopy(Path.Combine(sf.arcOutDir, sf.fNameArc), Path.Combine(sf.outDir, sf.fNameArc));
-            }
         }
-        private void ScanPZ(string f) {
+        private void ScanPZ(string f)
+        {
             int tk;          //счётчик тактов
             string q;        //код СМО
             Guid g;          //ГУИД
+            string fName = Path.GetFileName(f);
 
-            this.SetTextBox6(string.Format("Получен файл: {0}, в {1}", Path.GetFileName(f), DateTime.Now));
-            sf.argsStr = "select top 1 1 from dbo.MO_FS where FileName='" + Path.GetFileName(f) + "'";   //строка проверки повторности обработки
-            if (GetIdRecordTbl(@sf.argsStr) == 0)
-            { //если новый
+            SetTextBox6(string.Format("Получен файл: {0}, в {1}", fName, DateTime.Now));
+            sf.argsStr = "if exists (select 1 from dbo.MO_FS where FileName='" + fName + "') delete from dbo.MO_FS where FileName='" + fName + "';";   //запрос - если обработка повторна - удалю запись об файле
+            RunCommandSQL(GetConnectionString(), @sf.argsStr).Wait();
+            if (flag)
+            {
                 tk = Environment.TickCount;
                 g = Guid.NewGuid(); // определю GUIDs для файла.
                 StreamBLOBToServer(@f, g).Wait();   // сохраню файл в FileStream
                 if (flag)
                 {   // если обработка выполнена корректно, продолжу
-                    UnZipFile(@f, sf.tmpDir); // распакую
-                    sf.fName = Path.Combine(sf.tmpDir, Path.GetFileName(f.ToUpper()).Replace(".ZIP", ".CSV"));  // сформирую имя файла 
+                    zp.UnZipFile(@f, sf.tmpDir); // распакую
+                    sf.fName = Path.Combine(sf.tmpDir, sf.fName.ToUpper().Replace(".ZIP", ".CSV"));  // сформирую имя файла 
                     FileDelete(f);  //удалю исходный файл
                     q = Path.GetFileName(sf.fName).Substring(3, 5);
-                    if (File.Exists(Path.Combine(sf.tmpDir, sf.fName))) // если есть файл - обработаю
-                    {
-                        sf.argsStr = "exec dbo.sp_FileProcess_pz '" + q + "'";   //сформирую строку обработки 
-                        RunCommandSQL(GetConnectionString(), @sf.argsStr).Wait(); //обработка
-                        if (flag)
-                        {  // если выполнена корректно, выгружу данные
-                            sf.fName = sf.fName.Replace("PZ1", "PO1");
-                            sf.fNameArc = Path.GetFileName(sf.fName).Replace("CSV", "ZIP");
-                            OwnedToMO_CSV(sf.fName, "t_ap2", @"""Num"";""PID"";""ENP"";""PolTp"";""SPol"";""NPol"";""LPU"";""LPUDT""");
-                            CreateZip(sf.fName, Path.Combine(sf.outDir, sf.fNameArc));
-                            this.SetTextBox6(string.Format("Время обработки: ({0})", GetDate(Environment.TickCount - tk)));
-                        }
-                    }
-                    else
-                    {
-                        this.SetTextBox6(string.Format(errList[11] + " Файл: \"" + sf.fName + "\" "+ errList[14]));
+                    sf.argsStr = "exec dbo.sp_FileProcess_pz_2 '" + q + "'";   //сформирую строку обработки 
+                    RunCommandSQL(GetConnectionString(), @sf.argsStr).Wait(); //обработка
+                    if (flag)
+                    {  // если выполнена корректно, выгружу данные
+                        sf.fName = sf.fName.Replace("PZ1", "PO1");
+                        sf.fNameArc = Path.GetFileName(sf.fName).Replace("CSV", "ZIP");
+                        OwnedToMO_CSV(sf.fName, "t_ap2", @"""Num"";""PID"";""ENP"";""PolTp"";""SPol"";""NPol"";""LPU"";""LPUDT""");
+                        zp.CreateZip(sf.fName, Path.Combine(sf.outDir, sf.fNameArc));
+                        this.SetTextBox6(string.Format("Время обработки: ({0})", GetDate(Environment.TickCount - tk)));
                     }
                 }
             }
-            else
-            { //повторный
-                this.SetTextBox6(string.Format(errList[11] + " Файл: \"" + Path.GetFileName(f) + "\" " + errList[12]));
-                if (File.Exists(f))
-                    CreateZip(f, Path.Combine(sf.arcInpDir, Path.GetFileName(f).Replace("CSV", "ZIP")));   //упакую файл и перенесу в каталог arcInpDir
-            }
         }
-        private void ScanSZ(string f) {
+        private void ScanSZ(string f)
+        {
             int tk;          //таймер
             Guid g;          //GUID
             //string txt = ""; //
+            int maxrec = Convert.ToInt16(this.textBox9.Text);
 
             sf.fName = Path.GetFileName(f.ToUpper());   //имя обрабатываемого файла сверки
-            sf.arcInpDir = this.textBox3.Text + @"Inp\" + GetStorageDepth(sf.fName);  //склад - полученные файлы
+            sf.arcInpDir = sf.arcDir + @"Inp\" + ut.GetStorageDepth(sf.fName, sf.storageDepth);  //склад - полученные файлы
             if (!Directory.Exists(sf.arcInpDir))
-            {
                 Directory.CreateDirectory(sf.arcInpDir);
-            }
-            sf.arcOutDir = this.textBox3.Text + @"Out\" + GetStorageDepth(sf.fName);  //склад - ответные файлы 
+
+            sf.arcOutDir = sf.arcDir + @"Out\" + ut.GetStorageDepth(sf.fName, sf.storageDepth);  //склад - ответные файлы 
             if (!Directory.Exists(sf.arcOutDir))
-            {
                 Directory.CreateDirectory(sf.arcOutDir);
-            }
+
             this.SetTextBox6(string.Format("Получен файл: {0}: в {1}", sf.fName, DateTime.Now));
             sf.argsStr = "select top 1 1 from dbo.MO_FS where FileName='" + sf.fName + "' and [Status]=1 order by DateLoad desc"; //запрос - проверка наличия корректной обработки
             if (GetIdRecordTbl(@sf.argsStr) == 0)
@@ -1231,15 +1060,15 @@ namespace Scaner
                     RunCommandSQL(GetConnectionString(), sf.argsStr).Wait();
                     if (flag)
                     {
-                        UnZipFile(@f, sf.tmpDir); // распакую
+                        zp.UnZipFile(@f, sf.tmpDir); // распакую
                         if (File.Exists(@f))
-                        {
                             FileMove(@f, Path.Combine(sf.arcInpDir, sf.fName)); //перенесу в arcInpDir
-                        }
+
                         sf.fName = sf.fName.Replace(".ZIP", ".CSV");   // сформирую имя файла
                         if (File.Exists(Path.Combine(sf.tmpDir, sf.fName))) // если есть файл - обработаю
                         {
-                            if ((StreamTestFail(11, "1,2,3,4,5,6", new byte[] { 1, 2, 5, 6, 8 })) != 1)   //проверка файла на корректность
+                            //if ((StreamTestFile(11,"1,2,3,4,5,6", new byte[] { 1, 2, 5, 6, 8 })) == 0)   //проверка файла на корректность
+                            if (tf.TestFileCSV(sf, maxrec, 400, 11, "1,2,3,4,5,6,7,8,6,10", new byte[] { 1, 2, 5, 6, 8 }) == 0)   //проверка файла на корректность
                             {
                                 StreamTextToServer(Path.Combine(sf.tmpDir, sf.fName), g).Wait();   // загружу содержимое файла в таблицу
                                 FileDelete(Path.Combine(sf.tmpDir, sf.fName));  //если в каталоге есть файл - удалю
@@ -1257,7 +1086,7 @@ namespace Scaner
                                         /* выгрузка средствами C# */
                                         OwnedToMO_CSV(Path.Combine(sf.tmpDir, sf.fName), "tmp_szf", "");
                                         //OwnedToMO_CSV(Path.Combine(sf.tmpDir, sf.fName), "t_szf where fname='" + sf.fName + "'", "");
-                                        CreateZip(Path.Combine(sf.tmpDir, sf.fName), Path.Combine(sf.arcOutDir, sf.fName.Replace("CSV", "ZIP")));   //создам в arcOutDir
+                                        zp.CreateZip(Path.Combine(sf.tmpDir, sf.fName), Path.Combine(sf.arcOutDir, sf.fName.Replace("CSV", "ZIP")));   //создам в arcOutDir
                                         FileCopy(Path.Combine(sf.arcOutDir, sf.fName.Replace("CSV", "ZIP")), Path.Combine(sf.outDir, sf.fName.Replace("CSV", "ZIP"))); //копирую в outDir
                                         this.SetTextBox6(string.Format("Время обработки: ({0})", GetDate(Environment.TickCount - tk)));
                                     }
@@ -1266,6 +1095,7 @@ namespace Scaner
                             else
                             {
                                 FileDelete(Path.Combine(sf.tmpDir, Path.GetFileName(sf.fName)));  //если есть файл - удалю
+                                this.SetTextBox6(sf.errTxt);
                                 //TestOutErr();   //сформировать файл выявленных ошибок ФЛК
                                 //sf.fName = Path.Combine(sf.arcOutDir, @"err_" + Path.GetFileNameWithoutExtension(sf.fName) + @".txt"); //путь формирования файла со списком выявленных ошибок
                                 //FileDelete(sf.fName);  //если есть файл - удалю
@@ -1292,7 +1122,7 @@ namespace Scaner
             {
                 this.SetTextBox6(string.Format(errList[11] + " Файл: \"" + Path.GetFileName(@f) + "\" " + errList[12]));
                 if (File.Exists(@f))
-                    CreateZip(@f, Path.Combine(sf.arcInpDir, Path.GetFileName(@f).Replace("CSV", "ZIP")));   //упакую файл и перенесу в каталог arcInpDir
+                    zp.CreateZip(@f, Path.Combine(sf.arcInpDir, Path.GetFileName(@f).Replace("CSV", "ZIP")));   //упакую файл и перенесу в каталог arcInpDir
             }
             //void TestOutErr()
             //{//сформировать файл выявленных ошибок ФЛК
@@ -1320,7 +1150,7 @@ namespace Scaner
             sf.fName = Path.GetFileName(f.Replace("-", "")).ToUpper(); //Path.GetFileName(f.ToUpper());   //запишу в класс SkanFileInfo имя файла открепления
             sf.argsStr = "select top 1 id from dbo.MO_FS where FileName='" + sf.fName + "';";   //запишу в класс SkanFileInfo строку для проверки обработки файла
             FileMove(f, Path.Combine(sf.tmpDir, sf.fName)); //перенесу файл из inpDir в tmpDir
-            if (StreamTestFail(3, "1,2,3,4", new byte[] { 0 }) == 0) //проверка файла - на корректность формата
+            if (StreamTestFile(3, "1,2,3,4", new byte[] { 0 }) == 0) //проверка файла - на корректность формата
             {
                 if (GetIdRecordTbl(@sf.argsStr) == 0) //проверка файла - был ли обработан ранее?
                 {
@@ -1332,7 +1162,7 @@ namespace Scaner
                     if (flag)
                     {
                         sf.fNameArc = sf.fName.Replace(".CSV", ".ZIP");   //запишу в класс SkanFileInfo имя архива
-                        CreateZip(Path.Combine(sf.tmpDir, sf.fName), Path.Combine(sf.tmpDir, sf.fNameArc));    //создам архив в arcInpDir
+                        zp.CreateZip(Path.Combine(sf.tmpDir, sf.fName), Path.Combine(sf.tmpDir, sf.fNameArc));    //создам архив в arcInpDir
                         StreamBLOBToServer(Path.Combine(sf.tmpDir, sf.fNameArc), g).Wait();   //запись архива в FileStreams БД
                         if (File.Exists(Path.Combine(sf.tmpDir, sf.fNameArc))) //перенос архива из tmpDir в arcInpDir
                             FileMove(Path.Combine(sf.tmpDir, sf.fNameArc), Path.Combine(sf.arcInpDir, sf.fNameArc));
@@ -1344,7 +1174,7 @@ namespace Scaner
                             sf.fName = sf.fName.Replace("DR", "DR_E");   //запишу в класс SkanFileInfo имя файла протокола
                             OwnedToMO_CSV(Path.Combine(sf.tmpDir, sf.fName), "tmp_med_dr_f", ""); //выгрузка протокола
                             sf.fNameArc = sf.fName.Replace(".CSV", ".ZIP");   //запишу в класс SkanFileInfo имя архива
-                            CreateZip(Path.Combine(sf.tmpDir, sf.fName), Path.Combine(sf.arcOutDir, sf.fNameArc));  //создам в каталоге arcOutDir
+                            zp.CreateZip(Path.Combine(sf.tmpDir, sf.fName), Path.Combine(sf.arcOutDir, sf.fNameArc));  //создам в каталоге arcOutDir
                             FileCopy(Path.Combine(sf.arcOutDir, sf.fNameArc), Path.Combine(sf.outDir, sf.fNameArc)); //копирую в каталог outDir
 
                             sf.argsStr = "select id from peopleattach.dbo.med_dr_log where fname = '" + Path.GetFileName(f) + "';";  //сформирую строку для определения порядкового номера файла
@@ -1392,7 +1222,7 @@ namespace Scaner
 
                                                     OwnedToMO_CSV(Path.Combine(sf.tmpDir, sf.fName), "tmp_med_dr_f", "");
                                                     sf.fNameArc = sf.fName.Replace(".CSV", ".ZIP");   //запишу в класс SkanFileInfo имя архива
-                                                    CreateZip(Path.Combine(sf.tmpDir, sf.fName), Path.Combine(sf.arcOutDir, sf.fNameArc));   //создам в каталоге arcOutDir
+                                                    zp.CreateZip(Path.Combine(sf.tmpDir, sf.fName), Path.Combine(sf.arcOutDir, sf.fNameArc));   //создам в каталоге arcOutDir
                                                     FileCopy(Path.Combine(sf.arcOutDir, sf.fNameArc), Path.Combine(sf.outDir, sf.fNameArc)); //копирую в каталог outDir
                                                     i += reader.GetInt32(1);
                                                 }
@@ -1414,7 +1244,7 @@ namespace Scaner
 
                                 //sf.fName = Path.GetFileName(f.ToUpper()).Replace("DR", "DR_E");
                                 //OwnedToMO_CSV(Path.Combine(sf.tmpDir, sf.fName), "tmp_med_dr_f", "");
-                                //CreateZip(Path.Combine(sf.tmpDir, sf.fName), Path.Combine(sf.arcOutDir, sf.fNameArc));   //упакую протокол в каталоге outDir
+                                //zp.CreateZip(Path.Combine(sf.tmpDir, sf.fName), Path.Combine(sf.arcOutDir, sf.fNameArc));   //упакую протокол в каталоге outDir
                                 //FileDelete(Path.Combine(sf.outDir, sf.fNameArc));  //если в каталоге есть файл - удалю
                                 //File.Copy(Path.Combine(sf.arcOutDir, sf.fNameArc), Path.Combine(sf.outDir, sf.fNameArc)); //скопирую файл из каталога arcOutDir в каталог outDir
                             }
@@ -1424,14 +1254,14 @@ namespace Scaner
                     {
                         this.SetTextBox6(string.Format(errList[11] + " Файл: \"" + Path.GetFileName(f) + "\" " + errList[16]));
                         if (File.Exists(f))
-                            CreateZip(f, Path.Combine(sf.arcInpDir, Path.GetFileName(f).Replace("CSV", "ZIP")));   //упакую файл и перенесу в каталог arcInpDir
+                            zp.CreateZip(f, Path.Combine(sf.arcInpDir, Path.GetFileName(f).Replace("CSV", "ZIP")));   //упакую файл и перенесу в каталог arcInpDir
                     }
                 }
                 else
                 {
                     this.SetTextBox6(string.Format(errList[11] + " Файл: \"" + Path.GetFileName(f) + "\" " + errList[13] + ". Кол-во ошибок: " + sf.errCount + ". Список ошибок(код/строка): " + ((sf.errTest).Length > 100 ? sf.errTest.Remove(100) + "..." : sf.errTest)));
                     if (File.Exists(f))
-                        CreateZip(f, Path.Combine(sf.arcInpDir, Path.GetFileName(f).Replace("CSV", "ZIP")));   //упакую файл и перенесу в каталог arcInpDir
+                        zp.CreateZip(f, Path.Combine(sf.arcInpDir, Path.GetFileName(f).Replace("CSV", "ZIP")));   //упакую файл и перенесу в каталог arcInpDir
                 }
             }
         }
@@ -1476,13 +1306,13 @@ namespace Scaner
                                     RunCommandSQL(GetConnectionString(), @argsStr).Wait(); //обработка файла
                                     if (flag) {   // если обработка выполнена корректно, выгружу открепление
                                         fName = "PK1" + reader.GetValue(0).ToString() + DateTime.Now.ToString("yyyyMMdd") + ".accdb";
-                                        UnZipFile(Path.Combine(arcDir, "KFile.zip"), tmpDir); // распакую
+                                        zp.UnZipFile(Path.Combine(arcDir, "KFile.zip"), tmpDir); // распакую
                                         FileMove(Path.Combine(tmpDir, "KFile.accdb"), Path.Combine(tmpDir, fName));
                                         string connectString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + Path.Combine(tmpDir, fName) + ";";
                                         q = new ThreadRunQueryDB("Thread_1", "OleDB", connectString, "select * into register from dbo_kfile_SMO;");
                                         q = new ThreadRunQueryDB("Thread_2", "OleDB", connectString, "drop table dbo_kfile_SMO;");
                                         q = new ThreadRunQueryDB("Thread_3", "OleDB", connectString, "drop table dbo_kfile_FSB;");
-                                        CreateZip(Path.Combine(tmpDir, fName), Path.Combine(outDir, Path.GetFileName(fName).Replace("accdb", "zip")));
+                                        zp.CreateZip(Path.Combine(tmpDir, fName), Path.Combine(outDir, Path.GetFileName(fName).Replace("accdb", "zip")));
                                     }
                                 }
                             }
@@ -1539,13 +1369,13 @@ namespace Scaner
                     RunCommandSQL(GetConnectionString(), @argsStr).Wait(); //подготовка данных
                     if (flag) {   // если обработка выполнена корректно, выгружу открепление
                         fName = "RG_" + DateTime.Now.ToString("yyyy") + "_1.accdb";
-                        UnZipFile(Path.Combine(arcDir, "KFile.zip"), tmpDir); // распакую
+                        zp.UnZipFile(Path.Combine(arcDir, "KFile.zip"), tmpDir); // распакую
                         FileMove(Path.Combine(tmpDir, "KFile.accdb"), Path.Combine(tmpDir, fName));
                         string connectString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + Path.Combine(tmpDir, fName) + ";";
                         q = new ThreadRunQueryDB("Thread_1", "OleDB", connectString, "select * into register from dbo_kfile_FSB;");
                         q = new ThreadRunQueryDB("Thread_1", "OleDB", connectString, "drop table dbo_kfile_SMO;");
                         q = new ThreadRunQueryDB("Thread_1", "OleDB", connectString, "drop table dbo_kfile_FSB;");
-                        CreateZip(Path.Combine(tmpDir, fName), Path.Combine(outDir, Path.GetFileName(fName).Replace("accdb", "zip")));
+                        zp.CreateZip(Path.Combine(tmpDir, fName), Path.Combine(outDir, Path.GetFileName(fName).Replace("accdb", "zip")));
                     }
                 }
                 catch (Exception ex) {
@@ -1849,7 +1679,8 @@ namespace Scaner
         //    }
         //}
 
-        private void Button7_Click(object sender, EventArgs e) {
+        private void Button7_Click(object sender, EventArgs e)
+        {
             this.SetLabel10("Выполняется обработка");
             if (isExecHand)
             {
@@ -1861,10 +1692,12 @@ namespace Scaner
                 this.WorkupThread.Start();
             }
         }
-        private void Button8_Click(object sender, EventArgs e) {
+        private void Button8_Click(object sender, EventArgs e)
+        {
             ActivationScaner();
         }
-        private void Button9_Click(object sender, EventArgs e) {
+        private void Button9_Click(object sender, EventArgs e)
+        {
             this.SetLabel10(string.Format(errList[9]));// ("Активация выгрузки данных для СМО");
             if (isExecHand_SMO)
             {
@@ -1878,7 +1711,8 @@ namespace Scaner
                 this.SMOThread.Start();
             }
         }
-        private void Button10_Click(object sender, EventArgs e) {
+        private void Button10_Click(object sender, EventArgs e)
+        {
             this.SetLabel10(string.Format(errList[9]));// ("Активация выгрузки данных для ФСБ");
             if (isExecHand_FSB)
             {
@@ -1906,7 +1740,8 @@ namespace Scaner
                 //checkBox1.CheckAlign = ContentAlignment.MiddleLeft;
             }
         }
-        private void CheckBox2_Click(object sender, EventArgs e) {
+        private void CheckBox2_Click(object sender, EventArgs e)
+        {
             bool b;
             b = checkBox2.Checked;
             Properties.Settings.Default.AutoRunScan = b;
@@ -1923,7 +1758,8 @@ namespace Scaner
         {
             Properties.Settings.Default.Storage_Depth = comboBox3.Text;
         }
-        private void EnableAutoRun() {
+        private void EnableAutoRun()
+        {
             //private void EnableAutoRun(object sender, EventArgs e)
             //включение режима "старт при перезагрузке Windows"
             //var location = System.Reflection.Assembly.GetEntryAssembly().Location;                                                //полный путь
@@ -1932,7 +1768,8 @@ namespace Scaner
             //var file2 = Path.GetFileName(System.Reflection.Assembly.GetEntryAssembly().Location);                                 //имя файла
             ////HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run
             ////SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\\
-            try {
+            try
+            {
                 // Открываем нужную ветку в реестре
                 Microsoft.Win32.RegistryKey Key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software\\Microsoft\\Windows\\CurrentVersion\\Run",true);
                 //Microsoft.Win32.RegistryKey Key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\\", true);
@@ -1944,7 +1781,8 @@ namespace Scaner
                 this.SetTextBox6(string.Format("Ошибка доступа к реестру. {0}", ex.Message));
             }
         }
-        private void DisenableAutoRun() {
+        private void DisenableAutoRun()
+        {
             //выключение режима "старт при перезагрузке Windows", удалим ключ
             try {
                 //Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
@@ -2019,7 +1857,7 @@ namespace Scaner
             //    this.TestThread.Start();
             //}
         }
-         private void TextBox7_Validated(object sender, EventArgs e)
+        private void TextBox7_Validated(object sender, EventArgs e)
         {
             if (!string.IsNullOrEmpty(textBox7.Text) && !Regex.IsMatch(textBox7.Text, @"(\D)"))
             { // очистить ошибку.
@@ -2150,8 +1988,37 @@ namespace Scaner
                     button.Text = ti.txtLabel;
             }
         }
+
+        private void textBox8_Validated(object sender, EventArgs e)
+        {
+            if (!string.IsNullOrEmpty(textBox8.Text) && !Regex.IsMatch(textBox8.Text, @"(\D)"))
+            { // очистить ошибку.
+                errorProvider1.SetError(this.textBox8, "");
+            }
+            else
+            {  // установить ошибку, если некорректно и установить значение по умолчанию
+                errorProvider1.SetError(this.textBox8, errList[5]);
+                this.textBox8.Text = "3000";
+            }
+            Properties.Settings.Default.MaxRecMO = textBox8.Text;
+        }
+
+        private void textBox9_Validated(object sender, EventArgs e)
+        {
+            if (!string.IsNullOrEmpty(textBox9.Text) && !Regex.IsMatch(textBox9.Text, @"(\D)"))
+            { // очистить ошибку.
+                errorProvider1.SetError(this.textBox9, "");
+            }
+            else
+            {  // установить ошибку, если некорректно и установить значение по умолчанию
+                errorProvider1.SetError(this.textBox8, errList[5]);
+                this.textBox9.Text = "99999";
+            }
+            Properties.Settings.Default.MaxRecSZ = textBox9.Text;
+        }
+
     }
-    
+
     // ---------  классы и структуры программы  ----------
     class ThreadRunQueryDB
     {//поток для выполнения запроса к базе данных / thread to execute a database query
@@ -2244,6 +2111,7 @@ namespace Scaner
         public string tmpDir;       //папка временных файлов
         public string arcDir;       //папка архивных файлов
 
+        public string storageDepth; //глубина дерева каталога архивных файлов
         public string arcInpDir;    //папка Arc\Inp полученных файлов
         public string arcOutDir;    //папка Arc\Out ответных файлов
 
@@ -2253,6 +2121,7 @@ namespace Scaner
         public int errNumber;       //номер ошибки тестирования файла
         public int errCount;        //кол-во ошибок тестирования файла
         public string errTest;      //спикок ошибок тестирования файла
+        public string errTxt;       //описание ошибки тестирования файла
     }
     class AccessReader
     {

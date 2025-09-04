@@ -45,17 +45,18 @@
             this.errorProvider1 = new System.Windows.Forms.ErrorProvider(this.components);
             this.notifyIcon1 = new System.Windows.Forms.NotifyIcon(this.components);
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.comboBox3 = new System.Windows.Forms.ComboBox();
             this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.comboBox2 = new System.Windows.Forms.ComboBox();
-            this.comboBox3 = new System.Windows.Forms.ComboBox();
             this.checkBox2 = new System.Windows.Forms.CheckBox();
             this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.textBox7 = new System.Windows.Forms.TextBox();
+            this.textBox8 = new System.Windows.Forms.TextBox();
+            this.textBox9 = new System.Windows.Forms.TextBox();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.textBox6 = new System.Windows.Forms.TextBox();
             this.tabPage2 = new System.Windows.Forms.TabPage();
-            this.label13 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
@@ -66,6 +67,9 @@
             this.label8 = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
             this.label11 = new System.Windows.Forms.Label();
+            this.label13 = new System.Windows.Forms.Label();
+            this.label14 = new System.Windows.Forms.Label();
+            this.label15 = new System.Windows.Forms.Label();
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.textBox2 = new System.Windows.Forms.TextBox();
             this.textBox3 = new System.Windows.Forms.TextBox();
@@ -146,7 +150,7 @@
             // 
             this.button7.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.button7.ForeColor = System.Drawing.SystemColors.HotTrack;
-            this.button7.Location = new System.Drawing.Point(304, 234);
+            this.button7.Location = new System.Drawing.Point(304, 289);
             this.button7.Name = "button7";
             this.button7.Size = new System.Drawing.Size(81, 23);
             this.button7.TabIndex = 0;
@@ -159,7 +163,7 @@
             // 
             this.button8.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.button8.ForeColor = System.Drawing.SystemColors.HotTrack;
-            this.button8.Location = new System.Drawing.Point(391, 234);
+            this.button8.Location = new System.Drawing.Point(391, 289);
             this.button8.Name = "button8";
             this.button8.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.button8.Size = new System.Drawing.Size(81, 23);
@@ -202,6 +206,22 @@
             this.notifyIcon1.Text = "notifyIcon1";
             this.notifyIcon1.Visible = true;
             this.notifyIcon1.MouseClick += new System.Windows.Forms.MouseEventHandler(this.NotifyIcon1_MouseClick);
+            // 
+            // comboBox3
+            // 
+            this.comboBox3.FormattingEnabled = true;
+            this.comboBox3.Items.AddRange(new object[] {
+            "Год",
+            "Месяц",
+            "День"});
+            this.comboBox3.Location = new System.Drawing.Point(374, 168);
+            this.comboBox3.Name = "comboBox3";
+            this.comboBox3.Size = new System.Drawing.Size(64, 21);
+            this.comboBox3.TabIndex = 54;
+            this.comboBox3.Text = global::Scaner.Properties.Settings.Default.Storage_Depth;
+            this.toolTip1.SetToolTip(this.comboBox3, "Глубина создания каталогов складирования файлов после их обработки. Выбирается из" +
+        " списка, вне временной зависимости.");
+            this.comboBox3.TextChanged += new System.EventHandler(this.ComboBox3_TextChanged);
             // 
             // comboBox1
             // 
@@ -275,22 +295,6 @@
             this.toolTip1.SetToolTip(this.comboBox2, "Окончание работы сканера");
             this.comboBox2.Click += new System.EventHandler(this.ComboBox2_TextChanged);
             // 
-            // comboBox3
-            // 
-            this.comboBox3.FormattingEnabled = true;
-            this.comboBox3.Items.AddRange(new object[] {
-            "Год",
-            "Месяц",
-            "День"});
-            this.comboBox3.Location = new System.Drawing.Point(374, 168);
-            this.comboBox3.Name = "comboBox3";
-            this.comboBox3.Size = new System.Drawing.Size(64, 21);
-            this.comboBox3.TabIndex = 54;
-            this.comboBox3.Text = global::Scaner.Properties.Settings.Default.Storage_Depth;
-            this.toolTip1.SetToolTip(this.comboBox3, "Глубина создания каталогов складирования файлов после их обработки. Выбирается из" +
-        " списка, вне временной зависимости.");
-            this.comboBox3.Click += new System.EventHandler(this.ComboBox3_TextChanged);
-            // 
             // checkBox2
             // 
             this.checkBox2.AutoSize = true;
@@ -326,6 +330,30 @@
             this.toolTip1.SetToolTip(this.textBox7, "Периодичность сканирования");
             this.textBox7.Validated += new System.EventHandler(this.TextBox7_Validated);
             // 
+            // textBox8
+            // 
+            this.textBox8.DataBindings.Add(new System.Windows.Forms.Binding("Text", global::Scaner.Properties.Settings.Default, "MaxRecMO", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
+            this.textBox8.Location = new System.Drawing.Point(374, 194);
+            this.textBox8.Name = "textBox8";
+            this.textBox8.Size = new System.Drawing.Size(64, 20);
+            this.textBox8.TabIndex = 56;
+            this.textBox8.Text = global::Scaner.Properties.Settings.Default.MaxRecMO;
+            this.textBox8.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.toolTip1.SetToolTip(this.textBox8, "Норматив максимального числа записей в файле по прикреплению ЗЛ к МО");
+            this.textBox8.Validated += new System.EventHandler(this.textBox8_Validated);
+            // 
+            // textBox9
+            // 
+            this.textBox9.DataBindings.Add(new System.Windows.Forms.Binding("Text", global::Scaner.Properties.Settings.Default, "MaxRecSZ", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
+            this.textBox9.Location = new System.Drawing.Point(374, 219);
+            this.textBox9.Name = "textBox9";
+            this.textBox9.Size = new System.Drawing.Size(64, 20);
+            this.textBox9.TabIndex = 58;
+            this.textBox9.Text = global::Scaner.Properties.Settings.Default.MaxRecSZ;
+            this.textBox9.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.toolTip1.SetToolTip(this.textBox9, "Норматив максимального числа записей в файле по сверке прикрепления ЗЛ к МО");
+            this.textBox9.Validated += new System.EventHandler(this.textBox9_Validated);
+            // 
             // tabControl1
             // 
             this.tabControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -337,7 +365,7 @@
             this.tabControl1.Location = new System.Drawing.Point(6, 7);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(474, 221);
+            this.tabControl1.Size = new System.Drawing.Size(474, 276);
             this.tabControl1.TabIndex = 28;
             // 
             // tabPage1
@@ -347,7 +375,7 @@
             this.tabPage1.Location = new System.Drawing.Point(4, 22);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(441, 195);
+            this.tabPage1.Size = new System.Drawing.Size(466, 250);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Протокол";
             // 
@@ -364,15 +392,13 @@
             this.textBox6.Name = "textBox6";
             this.textBox6.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.textBox6.ShortcutsEnabled = false;
-            this.textBox6.Size = new System.Drawing.Size(430, 235);
+            this.textBox6.Size = new System.Drawing.Size(455, 238);
             this.textBox6.TabIndex = 4;
             this.textBox6.Text = "Ожидание запуска\r\n";
             // 
             // tabPage2
             // 
             this.tabPage2.BackColor = System.Drawing.Color.Gainsboro;
-            this.tabPage2.Controls.Add(this.comboBox3);
-            this.tabPage2.Controls.Add(this.label13);
             this.tabPage2.Controls.Add(this.button1);
             this.tabPage2.Controls.Add(this.button2);
             this.tabPage2.Controls.Add(this.button3);
@@ -380,8 +406,9 @@
             this.tabPage2.Controls.Add(this.button4);
             this.tabPage2.Controls.Add(this.comboBox1);
             this.tabPage2.Controls.Add(this.comboBox2);
-            this.tabPage2.Controls.Add(this.checkBox2);
+            this.tabPage2.Controls.Add(this.comboBox3);
             this.tabPage2.Controls.Add(this.checkBox1);
+            this.tabPage2.Controls.Add(this.checkBox2);
             this.tabPage2.Controls.Add(this.label1);
             this.tabPage2.Controls.Add(this.label2);
             this.tabPage2.Controls.Add(this.label3);
@@ -392,27 +419,23 @@
             this.tabPage2.Controls.Add(this.label8);
             this.tabPage2.Controls.Add(this.label9);
             this.tabPage2.Controls.Add(this.label11);
+            this.tabPage2.Controls.Add(this.label13);
+            this.tabPage2.Controls.Add(this.label14);
+            this.tabPage2.Controls.Add(this.label15);
             this.tabPage2.Controls.Add(this.textBox1);
             this.tabPage2.Controls.Add(this.textBox2);
             this.tabPage2.Controls.Add(this.textBox3);
             this.tabPage2.Controls.Add(this.textBox4);
             this.tabPage2.Controls.Add(this.textBox5);
             this.tabPage2.Controls.Add(this.textBox7);
+            this.tabPage2.Controls.Add(this.textBox8);
+            this.tabPage2.Controls.Add(this.textBox9);
             this.tabPage2.Location = new System.Drawing.Point(4, 22);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(466, 195);
+            this.tabPage2.Size = new System.Drawing.Size(466, 250);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "Параметры";
-            // 
-            // label13
-            // 
-            this.label13.AutoSize = true;
-            this.label13.Location = new System.Drawing.Point(34, 171);
-            this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(334, 13);
-            this.label13.TabIndex = 53;
-            this.label13.Text = "Глубина создания каталогов хранения файлов после обработки";
             // 
             // label1
             // 
@@ -504,6 +527,33 @@
             this.label11.TabIndex = 51;
             this.label11.Text = "Активация сканера при старте программы";
             // 
+            // label13
+            // 
+            this.label13.AutoSize = true;
+            this.label13.Location = new System.Drawing.Point(8, 171);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(334, 13);
+            this.label13.TabIndex = 53;
+            this.label13.Text = "Глубина создания каталогов хранения файлов после обработки";
+            // 
+            // label14
+            // 
+            this.label14.AutoSize = true;
+            this.label14.Location = new System.Drawing.Point(8, 197);
+            this.label14.Name = "label14";
+            this.label14.Size = new System.Drawing.Size(339, 13);
+            this.label14.TabIndex = 55;
+            this.label14.Text = "Норматив количества записей в файле прикрепления (тип \"MO\")";
+            // 
+            // label15
+            // 
+            this.label15.AutoSize = true;
+            this.label15.Location = new System.Drawing.Point(8, 222);
+            this.label15.Name = "label15";
+            this.label15.Size = new System.Drawing.Size(300, 13);
+            this.label15.TabIndex = 57;
+            this.label15.Text = "Норматив количества записей в файле сверки (тип \"SZ\")";
+            // 
             // textBox1
             // 
             this.textBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
@@ -570,7 +620,7 @@
             this.tabPage3.Location = new System.Drawing.Point(4, 22);
             this.tabPage3.Name = "tabPage3";
             this.tabPage3.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage3.Size = new System.Drawing.Size(441, 195);
+            this.tabPage3.Size = new System.Drawing.Size(466, 250);
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "Инструменты";
             // 
@@ -588,7 +638,7 @@
             this.label10.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label10.AutoSize = true;
             this.label10.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.label10.Location = new System.Drawing.Point(12, 239);
+            this.label10.Location = new System.Drawing.Point(12, 294);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(103, 13);
             this.label10.TabIndex = 1;
@@ -598,12 +648,12 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(484, 261);
+            this.ClientSize = new System.Drawing.Size(484, 316);
             this.Controls.Add(this.tabControl1);
             this.Controls.Add(this.button7);
             this.Controls.Add(this.button8);
             this.Controls.Add(this.label10);
-            this.MinimumSize = new System.Drawing.Size(500, 300);
+            this.MinimumSize = new System.Drawing.Size(500, 355);
             this.Name = "Form1";
             this.Text = "Сканер СРЗ";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
@@ -647,6 +697,7 @@
         private System.Windows.Forms.TabPage tabPage3;
         private System.Windows.Forms.ComboBox comboBox1;
         private System.Windows.Forms.ComboBox comboBox2;
+        private System.Windows.Forms.ComboBox comboBox3;
         private System.Windows.Forms.CheckBox checkBox1;
         private System.Windows.Forms.CheckBox checkBox2;
         private System.Windows.Forms.Label label1;
@@ -661,6 +712,9 @@
         private System.Windows.Forms.Label label10;
         private System.Windows.Forms.Label label11;
         private System.Windows.Forms.Label label12;
+        private System.Windows.Forms.Label label13;
+        private System.Windows.Forms.Label label14;
+        private System.Windows.Forms.Label label15;
         private System.Windows.Forms.TextBox textBox1;
         private System.Windows.Forms.TextBox textBox2;
         private System.Windows.Forms.TextBox textBox3;
@@ -668,8 +722,8 @@
         private System.Windows.Forms.TextBox textBox5;
         private System.Windows.Forms.TextBox textBox6;
         private System.Windows.Forms.TextBox textBox7;
-        private System.Windows.Forms.ComboBox comboBox3;
-        private System.Windows.Forms.Label label13;
+        private System.Windows.Forms.TextBox textBox8;
+        private System.Windows.Forms.TextBox textBox9;
     }
 }
 

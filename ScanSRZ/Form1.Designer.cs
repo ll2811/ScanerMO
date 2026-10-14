@@ -45,14 +45,6 @@
             this.errorProvider1 = new System.Windows.Forms.ErrorProvider(this.components);
             this.notifyIcon1 = new System.Windows.Forms.NotifyIcon(this.components);
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.comboBox3 = new System.Windows.Forms.ComboBox();
-            this.comboBox1 = new System.Windows.Forms.ComboBox();
-            this.comboBox2 = new System.Windows.Forms.ComboBox();
-            this.checkBox2 = new System.Windows.Forms.CheckBox();
-            this.checkBox1 = new System.Windows.Forms.CheckBox();
-            this.textBox7 = new System.Windows.Forms.TextBox();
-            this.textBox8 = new System.Windows.Forms.TextBox();
-            this.textBox9 = new System.Windows.Forms.TextBox();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.textBox6 = new System.Windows.Forms.TextBox();
@@ -70,14 +62,22 @@
             this.label13 = new System.Windows.Forms.Label();
             this.label14 = new System.Windows.Forms.Label();
             this.label15 = new System.Windows.Forms.Label();
+            this.tabPage3 = new System.Windows.Forms.TabPage();
+            this.label12 = new System.Windows.Forms.Label();
+            this.label10 = new System.Windows.Forms.Label();
+            this.comboBox1 = new System.Windows.Forms.ComboBox();
+            this.comboBox2 = new System.Windows.Forms.ComboBox();
+            this.comboBox3 = new System.Windows.Forms.ComboBox();
+            this.checkBox1 = new System.Windows.Forms.CheckBox();
+            this.checkBox2 = new System.Windows.Forms.CheckBox();
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.textBox2 = new System.Windows.Forms.TextBox();
             this.textBox3 = new System.Windows.Forms.TextBox();
             this.textBox4 = new System.Windows.Forms.TextBox();
             this.textBox5 = new System.Windows.Forms.TextBox();
-            this.tabPage3 = new System.Windows.Forms.TabPage();
-            this.label12 = new System.Windows.Forms.Label();
-            this.label10 = new System.Windows.Forms.Label();
+            this.textBox7 = new System.Windows.Forms.TextBox();
+            this.textBox8 = new System.Windows.Forms.TextBox();
+            this.textBox9 = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.errorProvider1)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
@@ -207,153 +207,6 @@
             this.notifyIcon1.Visible = true;
             this.notifyIcon1.MouseClick += new System.Windows.Forms.MouseEventHandler(this.NotifyIcon1_MouseClick);
             // 
-            // comboBox3
-            // 
-            this.comboBox3.FormattingEnabled = true;
-            this.comboBox3.Items.AddRange(new object[] {
-            "Год",
-            "Месяц",
-            "День"});
-            this.comboBox3.Location = new System.Drawing.Point(374, 168);
-            this.comboBox3.Name = "comboBox3";
-            this.comboBox3.Size = new System.Drawing.Size(64, 21);
-            this.comboBox3.TabIndex = 54;
-            this.comboBox3.Text = global::Scaner.Properties.Settings.Default.Storage_Depth;
-            this.toolTip1.SetToolTip(this.comboBox3, "Глубина создания каталогов складирования файлов после их обработки. Выбирается из" +
-        " списка, вне временной зависимости.");
-            this.comboBox3.TextChanged += new System.EventHandler(this.ComboBox3_TextChanged);
-            // 
-            // comboBox1
-            // 
-            this.comboBox1.FormattingEnabled = true;
-            this.comboBox1.Items.AddRange(new object[] {
-            "1",
-            "2",
-            "3",
-            "4",
-            "5",
-            "6",
-            "7",
-            "8",
-            "9",
-            "10",
-            "11",
-            "12",
-            "13",
-            "14",
-            "15",
-            "16",
-            "17",
-            "18",
-            "19",
-            "20",
-            "21",
-            "22",
-            "23",
-            "24"});
-            this.comboBox1.Location = new System.Drawing.Point(118, 117);
-            this.comboBox1.Name = "comboBox1";
-            this.comboBox1.Size = new System.Drawing.Size(39, 21);
-            this.comboBox1.TabIndex = 43;
-            this.comboBox1.Text = global::Scaner.Properties.Settings.Default.Time_On;
-            this.toolTip1.SetToolTip(this.comboBox1, "Начало работы сканера");
-            this.comboBox1.Click += new System.EventHandler(this.ComboBox1_TextChanged);
-            // 
-            // comboBox2
-            // 
-            this.comboBox2.FormattingEnabled = true;
-            this.comboBox2.Items.AddRange(new object[] {
-            "1",
-            "2",
-            "3",
-            "4",
-            "5",
-            "6",
-            "7",
-            "8",
-            "9",
-            "10",
-            "11",
-            "12",
-            "13",
-            "14",
-            "15",
-            "16",
-            "17",
-            "18",
-            "19",
-            "20",
-            "21",
-            "22",
-            "23",
-            "24"});
-            this.comboBox2.Location = new System.Drawing.Point(196, 117);
-            this.comboBox2.Name = "comboBox2";
-            this.comboBox2.Size = new System.Drawing.Size(39, 21);
-            this.comboBox2.TabIndex = 44;
-            this.comboBox2.Text = global::Scaner.Properties.Settings.Default.Time_Off;
-            this.toolTip1.SetToolTip(this.comboBox2, "Окончание работы сканера");
-            this.comboBox2.Click += new System.EventHandler(this.ComboBox2_TextChanged);
-            // 
-            // checkBox2
-            // 
-            this.checkBox2.AutoSize = true;
-            this.checkBox2.Checked = global::Scaner.Properties.Settings.Default.AutoRunScan;
-            this.checkBox2.Location = new System.Drawing.Point(425, 146);
-            this.checkBox2.Name = "checkBox2";
-            this.checkBox2.Size = new System.Drawing.Size(15, 14);
-            this.checkBox2.TabIndex = 52;
-            this.toolTip1.SetToolTip(this.checkBox2, "Активизация сканера при старте программы");
-            this.checkBox2.UseVisualStyleBackColor = true;
-            this.checkBox2.Click += new System.EventHandler(this.CheckBox2_Click);
-            // 
-            // checkBox1
-            // 
-            this.checkBox1.AutoSize = true;
-            this.checkBox1.Checked = global::Scaner.Properties.Settings.Default.AutoRunApp;
-            this.checkBox1.Location = new System.Drawing.Point(171, 146);
-            this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Size = new System.Drawing.Size(15, 14);
-            this.checkBox1.TabIndex = 50;
-            this.toolTip1.SetToolTip(this.checkBox1, "Автозапуск программы при загрузке Windows");
-            this.checkBox1.UseVisualStyleBackColor = true;
-            this.checkBox1.Click += new System.EventHandler(this.CheckBox1_Click);
-            // 
-            // textBox7
-            // 
-            this.textBox7.Location = new System.Drawing.Point(393, 118);
-            this.textBox7.Name = "textBox7";
-            this.textBox7.Size = new System.Drawing.Size(45, 20);
-            this.textBox7.TabIndex = 48;
-            this.textBox7.Text = global::Scaner.Properties.Settings.Default.Cycle;
-            this.textBox7.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            this.toolTip1.SetToolTip(this.textBox7, "Периодичность сканирования");
-            this.textBox7.Validated += new System.EventHandler(this.TextBox7_Validated);
-            // 
-            // textBox8
-            // 
-            this.textBox8.DataBindings.Add(new System.Windows.Forms.Binding("Text", global::Scaner.Properties.Settings.Default, "MaxRecMO", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
-            this.textBox8.Location = new System.Drawing.Point(374, 194);
-            this.textBox8.Name = "textBox8";
-            this.textBox8.Size = new System.Drawing.Size(64, 20);
-            this.textBox8.TabIndex = 56;
-            this.textBox8.Text = global::Scaner.Properties.Settings.Default.MaxRecMO;
-            this.textBox8.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            this.toolTip1.SetToolTip(this.textBox8, "Норматив максимального числа записей в файле по прикреплению ЗЛ к МО");
-            this.textBox8.Validated += new System.EventHandler(this.textBox8_Validated);
-            // 
-            // textBox9
-            // 
-            this.textBox9.DataBindings.Add(new System.Windows.Forms.Binding("Text", global::Scaner.Properties.Settings.Default, "MaxRecSZ", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
-            this.textBox9.Location = new System.Drawing.Point(374, 219);
-            this.textBox9.Name = "textBox9";
-            this.textBox9.Size = new System.Drawing.Size(64, 20);
-            this.textBox9.TabIndex = 58;
-            this.textBox9.Text = global::Scaner.Properties.Settings.Default.MaxRecSZ;
-            this.textBox9.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            this.toolTip1.SetToolTip(this.textBox9, "Норматив максимального числа записей в файле по сверке прикрепления ЗЛ к МО");
-            this.textBox9.Validated += new System.EventHandler(this.textBox9_Validated);
-            // 
             // tabControl1
             // 
             this.tabControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -404,11 +257,6 @@
             this.tabPage2.Controls.Add(this.button3);
             this.tabPage2.Controls.Add(this.button5);
             this.tabPage2.Controls.Add(this.button4);
-            this.tabPage2.Controls.Add(this.comboBox1);
-            this.tabPage2.Controls.Add(this.comboBox2);
-            this.tabPage2.Controls.Add(this.comboBox3);
-            this.tabPage2.Controls.Add(this.checkBox1);
-            this.tabPage2.Controls.Add(this.checkBox2);
             this.tabPage2.Controls.Add(this.label1);
             this.tabPage2.Controls.Add(this.label2);
             this.tabPage2.Controls.Add(this.label3);
@@ -422,6 +270,11 @@
             this.tabPage2.Controls.Add(this.label13);
             this.tabPage2.Controls.Add(this.label14);
             this.tabPage2.Controls.Add(this.label15);
+            this.tabPage2.Controls.Add(this.comboBox1);
+            this.tabPage2.Controls.Add(this.comboBox2);
+            this.tabPage2.Controls.Add(this.comboBox3);
+            this.tabPage2.Controls.Add(this.checkBox1);
+            this.tabPage2.Controls.Add(this.checkBox2);
             this.tabPage2.Controls.Add(this.textBox1);
             this.tabPage2.Controls.Add(this.textBox2);
             this.tabPage2.Controls.Add(this.textBox3);
@@ -554,6 +407,152 @@
             this.label15.TabIndex = 57;
             this.label15.Text = "Норматив количества записей в файле сверки (тип \"SZ\")";
             // 
+            // tabPage3
+            // 
+            this.tabPage3.BackColor = System.Drawing.Color.Gainsboro;
+            this.tabPage3.Controls.Add(this.label12);
+            this.tabPage3.Controls.Add(this.button9);
+            this.tabPage3.Controls.Add(this.button10);
+            this.tabPage3.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.tabPage3.Location = new System.Drawing.Point(4, 22);
+            this.tabPage3.Name = "tabPage3";
+            this.tabPage3.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPage3.Size = new System.Drawing.Size(466, 250);
+            this.tabPage3.TabIndex = 2;
+            this.tabPage3.Text = "Инструменты";
+            // 
+            // label12
+            // 
+            this.label12.AutoSize = true;
+            this.label12.Location = new System.Drawing.Point(6, 11);
+            this.label12.Name = "label12";
+            this.label12.Size = new System.Drawing.Size(173, 13);
+            this.label12.TabIndex = 2;
+            this.label12.Text = "Выгрузка из СРЗ сведений о ЗЛ";
+            // 
+            // label10
+            // 
+            this.label10.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.label10.AutoSize = true;
+            this.label10.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.label10.Location = new System.Drawing.Point(12, 294);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(103, 13);
+            this.label10.TabIndex = 1;
+            this.label10.Text = "Ожидание запуска";
+            // 
+            // comboBox1
+            // 
+            this.comboBox1.FormattingEnabled = true;
+            this.comboBox1.Items.AddRange(new object[] {
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "10",
+            "11",
+            "12",
+            "13",
+            "14",
+            "15",
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21",
+            "22",
+            "23",
+            "24"});
+            this.comboBox1.Location = new System.Drawing.Point(118, 117);
+            this.comboBox1.Name = "comboBox1";
+            this.comboBox1.Size = new System.Drawing.Size(39, 21);
+            this.comboBox1.TabIndex = 43;
+            this.comboBox1.Text = global::Scaner.Properties.Settings.Default.Time_On;
+            this.toolTip1.SetToolTip(this.comboBox1, "Начало работы сканера");
+            this.comboBox1.Click += new System.EventHandler(this.ComboBox1_TextChanged);
+            // 
+            // comboBox2
+            // 
+            this.comboBox2.FormattingEnabled = true;
+            this.comboBox2.Items.AddRange(new object[] {
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "10",
+            "11",
+            "12",
+            "13",
+            "14",
+            "15",
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21",
+            "22",
+            "23",
+            "24"});
+            this.comboBox2.Location = new System.Drawing.Point(196, 117);
+            this.comboBox2.Name = "comboBox2";
+            this.comboBox2.Size = new System.Drawing.Size(39, 21);
+            this.comboBox2.TabIndex = 44;
+            this.comboBox2.Text = global::Scaner.Properties.Settings.Default.Time_Off;
+            this.toolTip1.SetToolTip(this.comboBox2, "Окончание работы сканера");
+            this.comboBox2.Click += new System.EventHandler(this.ComboBox2_TextChanged);
+            // 
+            // comboBox3
+            // 
+            this.comboBox3.FormattingEnabled = true;
+            this.comboBox3.Items.AddRange(new object[] {
+            "Год",
+            "Месяц",
+            "День"});
+            this.comboBox3.Location = new System.Drawing.Point(374, 168);
+            this.comboBox3.Name = "comboBox3";
+            this.comboBox3.Size = new System.Drawing.Size(64, 21);
+            this.comboBox3.TabIndex = 54;
+            this.comboBox3.Text = global::Scaner.Properties.Settings.Default.Storage_Depth;
+            this.toolTip1.SetToolTip(this.comboBox3, "Глубина создания каталогов складирования файлов после их обработки. Выбирается из" +
+        " списка, вне временной зависимости.");
+            this.comboBox3.TextChanged += new System.EventHandler(this.ComboBox3_TextChanged);
+            // 
+            // checkBox1
+            // 
+            this.checkBox1.AutoSize = true;
+            this.checkBox1.Checked = global::Scaner.Properties.Settings.Default.AutoRunApp;
+            this.checkBox1.Location = new System.Drawing.Point(171, 146);
+            this.checkBox1.Name = "checkBox1";
+            this.checkBox1.Size = new System.Drawing.Size(15, 14);
+            this.checkBox1.TabIndex = 50;
+            this.toolTip1.SetToolTip(this.checkBox1, "Автозапуск программы при загрузке Windows");
+            this.checkBox1.UseVisualStyleBackColor = true;
+            this.checkBox1.Click += new System.EventHandler(this.CheckBox1_Click);
+            // 
+            // checkBox2
+            // 
+            this.checkBox2.AutoSize = true;
+            this.checkBox2.Checked = global::Scaner.Properties.Settings.Default.AutoRunScan;
+            this.checkBox2.Location = new System.Drawing.Point(425, 146);
+            this.checkBox2.Name = "checkBox2";
+            this.checkBox2.Size = new System.Drawing.Size(15, 14);
+            this.checkBox2.TabIndex = 52;
+            this.toolTip1.SetToolTip(this.checkBox2, "Активизация сканера при старте программы");
+            this.checkBox2.UseVisualStyleBackColor = true;
+            this.checkBox2.Click += new System.EventHandler(this.CheckBox2_Click);
+            // 
             // textBox1
             // 
             this.textBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
@@ -610,39 +609,40 @@
             this.textBox5.TabIndex = 40;
             this.textBox5.Text = global::Scaner.Properties.Settings.Default.Path_Bcp;
             // 
-            // tabPage3
+            // textBox7
             // 
-            this.tabPage3.BackColor = System.Drawing.Color.Gainsboro;
-            this.tabPage3.Controls.Add(this.label12);
-            this.tabPage3.Controls.Add(this.button9);
-            this.tabPage3.Controls.Add(this.button10);
-            this.tabPage3.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.tabPage3.Location = new System.Drawing.Point(4, 22);
-            this.tabPage3.Name = "tabPage3";
-            this.tabPage3.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage3.Size = new System.Drawing.Size(466, 250);
-            this.tabPage3.TabIndex = 2;
-            this.tabPage3.Text = "Инструменты";
+            this.textBox7.Location = new System.Drawing.Point(393, 118);
+            this.textBox7.Name = "textBox7";
+            this.textBox7.Size = new System.Drawing.Size(45, 20);
+            this.textBox7.TabIndex = 48;
+            this.textBox7.Text = global::Scaner.Properties.Settings.Default.Cycle;
+            this.textBox7.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.toolTip1.SetToolTip(this.textBox7, "Периодичность сканирования");
+            this.textBox7.Validated += new System.EventHandler(this.TextBox7_Validated);
             // 
-            // label12
+            // textBox8
             // 
-            this.label12.AutoSize = true;
-            this.label12.Location = new System.Drawing.Point(6, 11);
-            this.label12.Name = "label12";
-            this.label12.Size = new System.Drawing.Size(173, 13);
-            this.label12.TabIndex = 2;
-            this.label12.Text = "Выгрузка из СРЗ сведений о ЗЛ";
+            this.textBox8.DataBindings.Add(new System.Windows.Forms.Binding("Text", global::Scaner.Properties.Settings.Default, "MaxRecMO", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
+            this.textBox8.Location = new System.Drawing.Point(374, 194);
+            this.textBox8.Name = "textBox8";
+            this.textBox8.Size = new System.Drawing.Size(64, 20);
+            this.textBox8.TabIndex = 56;
+            this.textBox8.Text = global::Scaner.Properties.Settings.Default.MaxRecMO;
+            this.textBox8.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.toolTip1.SetToolTip(this.textBox8, "Норматив максимального числа записей в файле по прикреплению ЗЛ к МО");
+            this.textBox8.Validated += new System.EventHandler(this.TextBox8_Validated);
             // 
-            // label10
+            // textBox9
             // 
-            this.label10.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.label10.AutoSize = true;
-            this.label10.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.label10.Location = new System.Drawing.Point(12, 294);
-            this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(103, 13);
-            this.label10.TabIndex = 1;
-            this.label10.Text = "Ожидание запуска";
+            this.textBox9.DataBindings.Add(new System.Windows.Forms.Binding("Text", global::Scaner.Properties.Settings.Default, "MaxRecSZ", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
+            this.textBox9.Location = new System.Drawing.Point(374, 219);
+            this.textBox9.Name = "textBox9";
+            this.textBox9.Size = new System.Drawing.Size(64, 20);
+            this.textBox9.TabIndex = 58;
+            this.textBox9.Text = global::Scaner.Properties.Settings.Default.MaxRecSZ;
+            this.textBox9.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.toolTip1.SetToolTip(this.textBox9, "Норматив максимального числа записей в файле по сверке прикрепления ЗЛ к МО");
+            this.textBox9.Validated += new System.EventHandler(this.TextBox9_Validated);
             // 
             // Form1
             // 
@@ -709,7 +709,7 @@
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.Label label9;
-        private System.Windows.Forms.Label label10;
+        public System.Windows.Forms.Label label10;
         private System.Windows.Forms.Label label11;
         private System.Windows.Forms.Label label12;
         private System.Windows.Forms.Label label13;

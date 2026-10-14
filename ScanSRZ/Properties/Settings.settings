@@ -25,7 +25,7 @@
       <Value Profile="(Default)">18</Value>
     </Setting>
     <Setting Name="Cycle" Type="System.String" Scope="User">
-      <Value Profile="(Default)">300</Value>
+      <Value Profile="(Default)">60</Value>
     </Setting>
     <Setting Name="NameSrvSQL" Type="System.String" Scope="User">
       <Value Profile="(Default)" />

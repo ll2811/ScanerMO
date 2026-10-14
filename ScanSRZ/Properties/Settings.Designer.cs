@@ -106,7 +106,7 @@ namespace Scaner.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("300")]
+        [global::System.Configuration.DefaultSettingValueAttribute("60")]
         public string Cycle {
             get {
                 return ((string)(this["Cycle"]));

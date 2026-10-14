@@ -1,52 +1,89 @@
 ﻿using System;
 using System.IO;
 using System.Windows.Forms;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ICSharpCode.SharpZipLib.Zip;
+//using System.Threading;
+//using System.Runtime.InteropServices;
+
 
 namespace Scaner
 {
     class Zip
     {
-        public void UnZipFile(string lpFileName, string lpDirName)
+        Utility ut = new Utility { };
+        
+
+        //[DllImport("user32.dll", SetLastError = true)]
+        //static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
+        //[DllImport("user32.dll", SetLastError = true)]
+        //static extern bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+        //const uint WM_CLOSE = 0x0010;
+
+        public bool UnZipFile(string lpFileName, string lpDirName, string arcDir)
         {
-            // если каталога нет, то создать - извлечь файл
-            using (ZipInputStream s = new ZipInputStream(System.IO.File.OpenRead(lpFileName)))
+            TestFile tf = new TestFile { };
+            bool unzip = false;
+            if (tf.ValidateZipFile(lpFileName))
             {
-                ZipEntry theEntry;
-                while ((theEntry = s.GetNextEntry()) != null)
+                // если каталога нет, то создать - извлечь файл
+                using (ZipInputStream s = new ZipInputStream(System.IO.File.OpenRead(lpFileName)))
                 {
-                    string fileName = lpFileName;
-                    if (!Directory.Exists(lpDirName))
-                        Directory.CreateDirectory(lpDirName);
-                    if (fileName != String.Empty)
+                    ZipEntry theEntry;
+                    while ((theEntry = s.GetNextEntry()) != null)
                     {
-                        if (System.IO.File.Exists(lpDirName + "\\" + theEntry.Name)) // если в каталоге есть файл - удалю
-                            System.IO.File.Delete(lpDirName + "\\" + theEntry.Name);
-                        using (System.IO.FileStream streamWriter = System.IO.File.Create(lpDirName + "\\" + theEntry.Name))
+                        string fileName = lpFileName;
+                        if (!Directory.Exists(lpDirName))
+                            Directory.CreateDirectory(lpDirName);
+                        if (fileName != String.Empty)
                         {
-                            int size = 2048;
-                            byte[] data = new byte[2048];
-                            while (true)
+                            if (System.IO.File.Exists(lpDirName + "\\" + theEntry.Name)) // если в каталоге есть файл - удалю
+                                System.IO.File.Delete(lpDirName + "\\" + theEntry.Name);
+                            using (System.IO.FileStream streamWriter = System.IO.File.Create(lpDirName + "\\" + theEntry.Name))
                             {
-                                size = s.Read(data, 0, data.Length);
-                                if (size > 0)
+                                int size = 2048;
+                                byte[] data = new byte[2048];
+                                while (true)
                                 {
-                                    streamWriter.Write(data, 0, size);
+                                    size = s.Read(data, 0, data.Length);
+                                    if (size > 0)
+                                    {
+                                        streamWriter.Write(data, 0, size);
+                                    }
+                                    else
+                                    {
+                                        break;
+                                    }
                                 }
-                                else
-                                {
-                                    break;
-                                }
+                                unzip = true;
                             }
                         }
                     }
                 }
             }
+            else
+            {
+                //MessageBox.Show(string.Format("Файл: '{0}' - не соответствует своему формату,\nбудет перемещён в папку \"Temp\", каталога обработанных файлов! {1}", lpFileName, DateTime.Now), "Ошибка чтения файла! Сообщение закроется через 5 сек.", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                //MessageBox.Show("Ошибка чтения файла.");
+                //Thread.Sleep(5000);
+                //IntPtr mbWnd = FindWindow(null, "Ошибка чтения файла.");
+                //if (mbWnd != IntPtr.Zero)
+                //{
+                //    // Отправляем сообщение о закрытии
+                //    PostMessage(mbWnd, WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
+                //}
+                using (var form = new UserMessageBox())
+                {
+                    form.ShowDialog(); // Окно закроется автоматически через 5 секунд
+                }
+
+                string arcTemp = arcDir + @"Temp\";  //склад - полученных "кривых" файлов
+                if (!Directory.Exists(arcTemp))
+                    Directory.CreateDirectory(arcTemp);
+                ut.FileMove(lpFileName, Path.Combine(arcTemp, Path.GetFileName(lpFileName))); //файл перемещён в arcTemp
+            }
+            return unzip;
         }
+
         /// <summary>
         /// Упаковать файл в каталог нахождения исходного файла
         /// </summary>

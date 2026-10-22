@@ -28,7 +28,7 @@ namespace Scaner
     {
         const int ERROR_FILE_NOT_FOUND = 2; //ошибка - нет файла
         const int ERROR_ACCESS_DENIED = 5;  //ошибка - нет доступа
-        string[] errList = {/*( 0)*/"Указанный каталог не существует или не доступен!\nБудет восстановлен каталог по умолчанию\n, или укажите верный новый путь.",
+        string[] errList = {/*( 0)*/"Указанный каталог ({0}) недоступен, либо параметр несоответствует формату!\nУкажите верное значение параметра.",
                             /*( 1)*/"Выполняется обработка! Пожалуйста, дождитесь завершения.",
                             /*( 2)*/"Для записи файла, на устройстве недостаточно места!",
                             /*( 3)*/"Произошла ошибка выполнения модуля",
@@ -104,13 +104,21 @@ namespace Scaner
         private void Form1_Load(object sender, EventArgs e)
         {
             //string Text = "Сканер для СРЗ (версия " + System.Windows.Forms.Application.ProductVersion.ToString() + ")";
+            //проверка текущих значений параметров
+            Path_Validated(textBox1);
+            Path_Validated(textBox2);
+            Path_Validated(textBox3);
+            BDSQL_Validated(textBox4);
 
-            if (checkBox2.Checked)
+            if (ValueCheck())
             {
-                ActivationScaner();
-                //FormMinimized();
+                if (checkBox2.Checked)
+                {
+                    ActivationScaner();
+                    //FormMinimized();
+                }
+                WriteTextFile(this.textBox3.Text + @"scanlog.csv", string.Format("Запуск программы {0}(v{1}-{2}-{3})", DateTime.Now, System.Windows.Forms.Application.ProductVersion.ToString(), Environment.MachineName, Environment.UserName));
             }
-            WriteTextFile(this.textBox3.Text + @"scanlog.csv", string.Format("Запуск программы {0}(v{1}-{2}-{3})", DateTime.Now, System.Windows.Forms.Application.ProductVersion.ToString(), Environment.MachineName, Environment.UserName));
         }
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
         {
@@ -126,6 +134,7 @@ namespace Scaner
                     e.Cancel = true;
                     if (isExecScaner)
                         MessageBox.Show("Сканер активирован. Отключите режим активности сканера и закройте программу!", "Внимание!", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+
                     if (isExecHand | isExecHand_SMO | isExecHand_FSB)
                         MessageBox.Show("Выполняется обработка данных. Дождитесь её завершения, а затем закройте программу!", "Внимание!", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 }
@@ -134,6 +143,7 @@ namespace Scaner
             {
                 if (e.CloseReason == CloseReason.UserClosing)
                     e.Cancel = true;
+
                 altF4 = false;
             }
         }
@@ -159,6 +169,7 @@ namespace Scaner
                 {
                     if (!isExecHand)
                         notifyIcon1.Icon = Properties.Resources.Icon2;
+
                     notifyIcon1.Text = "Сверка прикрепления. (сканер включен с " + this.comboBox1.Text + " до " + this.comboBox2.Text + " часов)";
                     notifyIcon1.BalloonTipText = "Сканер активирован с " + this.comboBox1.Text + " до " + this.comboBox2.Text + " часов.";
                     notifyIcon1.ShowBalloonTip(500);
@@ -167,6 +178,7 @@ namespace Scaner
                 {
                     if (!isExecHand)
                         notifyIcon1.Icon = Properties.Resources.Icon1;
+
                     notifyIcon1.Text = "Сверка прикрепления. (сканер выключен)";
                     notifyIcon1.BalloonTipText = "Внимание! Сканер выключен.";
                     notifyIcon1.ShowBalloonTip(500);
@@ -265,7 +277,7 @@ namespace Scaner
         {   // получить значение первого поля первой записи в таблице
             int id = 0;
             string sql = queryString;
-            using (SqlConnection connection = new SqlConnection(GetConnectionString()))
+            using (SqlConnection connection = new SqlConnection(ut.GetConnectionString()))
             {
                 SqlCommand cmd = new SqlCommand(sql, connection);
                 try
@@ -283,7 +295,8 @@ namespace Scaner
                 }
                 finally
                 {
-                    if (connection != null) connection.Close();
+                    if (connection != null)
+                        connection.Close();
                     cmd.Dispose();
                 }
             }
@@ -325,7 +338,9 @@ namespace Scaner
                     }
                     finally
                     {
-                        if (connection != null) connection.Close();
+                        if (connection != null)
+                            connection.Close();
+
                         cmd.Dispose();
                     }
                 }
@@ -357,7 +372,9 @@ namespace Scaner
                     finally
                     {
                         //if (connection.State == System.Data.ConnectionState.Open) connection.Close();
-                        if (connection != null) connection.Close();
+                        if (connection != null)
+                            connection.Close();
+
                         connection.Dispose();
                     }
                 }
@@ -397,6 +414,7 @@ namespace Scaner
                         //if (connection.State == System.Data.ConnectionState.Open) connection.Close();
                         if (connection != null)
                             connection.Close();
+
                         connection.Dispose();
                     }
                 }
@@ -527,93 +545,7 @@ namespace Scaner
             }
         }
 
-        private void ThreadProcSafe_1()
-        {   //обработка файлов. метод выполняется в фоновом потоке
-            sf.errNumber = 0;
-            sf.inpDir = textBox1.Text;
-            sf.outDir = textBox2.Text;
-            sf.arcDir = textBox3.Text;
-            sf.arcInpDir = "";
-            sf.arcOutDir = "";
-            sf.storageDepth = Properties.Settings.Default.Storage_Depth; 
-//            sf.storageDepth = GetComboBox3();  
-            sf.tmpDir = Environment.GetEnvironmentVariable("TEMP");
-            sf.nameSrvSQL = textBox4.Text;
-            sf.pathBCP = @"" + textBox5.Text + @"";
-
-            if (!Directory.Exists(sf.inpDir))
-            {
-                SetTextBox6($"{errList[0]} {DateTime.Now}");
-                return;
-            }
-            if (isExecHand)
-            {
-                SetTextBox6($"{errList[1]} {DateTime.Now}");
-            }
-            else
-            {
-                try
-                {
-                    isExecHand = true;  //блокировка запуска потока
-                    SetLabel10("Проверка наличия файлов.");
-
-                    string[] zipList = Directory.GetFiles(sf.inpDir, "*");
-                    if (zipList.Length > 0)
-                    {   //проверка доступности каталога
-                        notifyIcon1.Icon = Properties.Resources.Icon4;
-
-                        /*------------------------------------- обработка файлов от МО. тип-"MO"  -----------------------------------*/
-                        /* запрос на прикрепление ЗЛ к МО    */
-                        zipList = Directory.GetFiles(sf.inpDir, "mo???????????????*.csv");
-                        foreach (string f in zipList)
-                        {
-                            ScanMO(f/*, sf*/);
-                         }
-                        /*------------------------------------- обработка файлов от СМО. тип-"PZ" -----------------------------------*/
-                        /* запрос по прикреплению ЗЛ к МО контингента ЗЛ в СМО, либо его части по предоставленному списку ЕНП */
-                        zipList = Directory.GetFiles(sf.inpDir, "pz1*.zip");
-                        foreach (string f in zipList) {
-                            ScanPZ(f/*, sf*/);
-                        }
-                        /*------------------------------------- обработка файлов от МО. тип-"SZ" ------------------------------------*/
-                        /* сверка прикрепления ЗЛ к МО по предоставленному МО списку ЗЛ */
-                        zipList = Directory.GetFiles(sf.inpDir, "sz???????????????*.zip");
-                        foreach (string f in zipList) {
-                            ScanSZ(f/*, sf*/);
-                        }
-                        /*------------------------------------- обработка файлов от ЦС. тип-"18000-MED_DR" ------------------------------------*/
-                        /* открепления ЗЛ  МО по предоставленному ЦС списку ЗЛ */
-                        zipList = Directory.GetFiles(sf.inpDir, "18000-MED_DR*.csv");
-                        foreach (string f in zipList)
-                        {
-                            ScanMED_DR(f/*, sf*/);
-                        }
-                        /*------------------------------------- обработка файлов от МО. тип-"QA" ------------------------------------*/
-                        /* открепления ЗЛ  МО по предоставленному ЦС списку ЗЛ */
-                        zipList = Directory.GetFiles(sf.inpDir, "qa2??????????????*.zip");
-                        foreach (string f in zipList)
-                        {
-                            ScanQA(f/*, sf*/);
-                        }
-
-                        notifyIcon1.Icon = Properties.Resources.Icon1;
-                    }
-                    else
-                        SetLabel10("Файлов для обработки нет!");
-                }
-                catch (Exception ex)
-                {
-                    SetTextBox6($"{errList[11]} {ex.Message}");
-                    //if (connection != null) connection.Close();
-                }
-                finally
-                {
-                    isExecHand = false;
-                    SetLabel10("Ожидание запуска.");
-                }
-            }
-        }
-        private void ScanMO(string f/*, SkanFileInfo sf*/)
+        private void ScanMO(string f)
         {   //метод - прикрепление ЗЛ к МО
             int id;     // порядковый номер файла в таблице MO_LOG
             string mo;  // код МО
@@ -626,7 +558,8 @@ namespace Scaner
 
             sf.fName = Path.GetFileName(f.ToUpper());   //имя файла обрабатываемого прикрепления
             txt = sf.fName.Substring(2, 1);
-            if (txt == "1" | txt == "2" | txt == "3") {
+            if (txt == "1" | txt == "2" | txt == "3")
+            {
                 txt = "";
                 sf.arcInpDir = sf.arcDir + @"Inp\" + ut.GetStorageDepth(sf.fName, sf.storageDepth);  //папка - полученные файлы
                 if (!Directory.Exists(sf.arcInpDir))
@@ -783,6 +716,7 @@ namespace Scaner
                             sf.fName = "err_" + Path.GetFileNameWithoutExtension(sf.fName) + ".txt";
                         else
                             sf.fName = Path.Combine(Path.GetDirectoryName(sf.fName), Path.GetFileName(sf.fName).Replace("MO", "E"));     //имя протокола ответа
+
                         WriteTextFile(Path.Combine(sf.arcOutDir, sf.fName), txt);   //сформирую ответ в МО
                         zp.CreateZip(Path.Combine(sf.arcOutDir, sf.fName));
                         sf.fNameArc = Path.GetFileNameWithoutExtension(sf.fName) + ".ZIP";
@@ -1034,7 +968,7 @@ namespace Scaner
         {
             int tk;          //таймер
             Guid g;          //GUID
-            int maxrec = Convert.ToInt32(this.textBox9.Text);
+            int maxrec = Convert.ToInt32(this.textBox10.Text);
 
             sf.fName = Path.GetFileName(f.ToUpper());   //имя обрабатываемого файла сверки
             sf.arcInpDir = $"{ sf.arcDir}Inp\\{ ut.GetStorageDepth(sf.fName, sf.storageDepth)}";  //склад - полученные файлы
@@ -1109,6 +1043,94 @@ namespace Scaner
             }
         }
 
+        private void ThreadProcSafe_1()
+        {   //обработка файлов. метод выполняется в фоновом потоке
+            sf.errNumber = 0;
+            sf.inpDir = textBox1.Text;
+            sf.outDir = textBox2.Text;
+            sf.arcDir = textBox3.Text;
+            sf.arcInpDir = "";
+            sf.arcOutDir = "";
+            sf.storageDepth = Properties.Settings.Default.Storage_Depth;
+            //            sf.storageDepth = GetComboBox3();  
+            sf.tmpDir = Environment.GetEnvironmentVariable("TEMP");
+            sf.nameSrvSQL = textBox4.Text;
+            sf.pathBCP = @"" + textBox5.Text + @"";
+
+            if (!Directory.Exists(sf.inpDir))
+            {
+                SetTextBox6($"{errList[0]} {DateTime.Now}");
+                return;
+            }
+            if (isExecHand)
+            {
+                SetTextBox6($"{errList[1]} {DateTime.Now}");
+            }
+            else
+            {
+                try
+                {
+                    isExecHand = true;  //блокировка запуска потока
+                    SetLabel10("Проверка наличия файлов.");
+
+                    string[] zipList = Directory.GetFiles(sf.inpDir, "*");
+                    if (zipList.Length > 0)
+                    {   //проверка доступности каталога
+                        notifyIcon1.Icon = Properties.Resources.Icon4;
+
+                        /*------------------------------------- обработка файлов от МО. тип-"MO"  -----------------------------------*/
+                        /* запрос на прикрепление ЗЛ к МО    */
+                        zipList = Directory.GetFiles(sf.inpDir, "mo???????????????*.csv");
+                        foreach (string f in zipList)
+                        {
+                            ScanMO(f/*, sf*/);
+                        }
+                        /*------------------------------------- обработка файлов от СМО. тип-"PZ" -----------------------------------*/
+                        /* запрос по прикреплению ЗЛ к МО контингента ЗЛ в СМО, либо его части по предоставленному списку ЕНП */
+                        zipList = Directory.GetFiles(sf.inpDir, "pz1*.zip");
+                        foreach (string f in zipList)
+                        {
+                            ScanPZ(f/*, sf*/);
+                        }
+                        /*------------------------------------- обработка файлов от МО. тип-"SZ" ------------------------------------*/
+                        /* сверка прикрепления ЗЛ к МО по предоставленному МО списку ЗЛ */
+                        zipList = Directory.GetFiles(sf.inpDir, "sz???????????????*.zip");
+                        foreach (string f in zipList)
+                        {
+                            ScanSZ(f/*, sf*/);
+                        }
+                        /*------------------------------------- обработка файлов от ЦС. тип-"18000-MED_DR" ------------------------------------*/
+                        /* открепления ЗЛ  МО по предоставленному ЦС списку ЗЛ */
+                        zipList = Directory.GetFiles(sf.inpDir, "18000-MED_DR*.csv");
+                        foreach (string f in zipList)
+                        {
+                            ScanMED_DR(f/*, sf*/);
+                        }
+                        /*------------------------------------- обработка файлов от МО. тип-"QA" ------------------------------------*/
+                        /* открепления ЗЛ  МО по предоставленному ЦС списку ЗЛ */
+                        zipList = Directory.GetFiles(sf.inpDir, "qa2??????????????*.zip");
+                        foreach (string f in zipList)
+                        {
+                            ScanQA(f/*, sf*/);
+                        }
+
+                        notifyIcon1.Icon = Properties.Resources.Icon1;
+                    }
+                    else
+                        SetLabel10("Файлов для обработки нет!");
+                }
+                catch (Exception ex)
+                {
+                    SetTextBox6($"{errList[11]} {ex.Message}");
+                    //if (connection != null) connection.Close();
+                }
+                finally
+                {
+                    isExecHand = false;
+                    SetLabel10("Ожидание запуска.");
+                }
+            }
+        }
         private void ThreadProcSafe_2()
         {
             string outDir;   //папка ответных файлов
@@ -1127,11 +1149,14 @@ namespace Scaner
             tmpDir = Environment.GetEnvironmentVariable("TEMP");    //папка временных файлов
             sf.nameSrvSQL = this.textBox4.Text;
 
-            if (isExecHand_SMO) {
+            if (isExecHand_SMO)
+            {
                 this.SetTextBox6(string.Format(errList[1] + " {0}", DateTime.Now));
             }
-            else {
-                try {
+            else
+            {
+                try
+                {
                     isExecHand_SMO = true;  //блокировка запуска потока
                     ti2.isExecHand = true;  //флаг потока - включение
                     ti2.txtLabel = "СМО";
@@ -1141,11 +1166,14 @@ namespace Scaner
                     string sql = "select [code] from [PolicyRegister].[dbo].[SMO] where cast(isnull(de,getdate()) as date) >= cast(getdate() as date)"; //сформируем строку для определения списока СМО
                     using (SqlConnection conn = new SqlConnection(GetConnectionString())) {
                         SqlCommand cmd = new SqlCommand(sql, conn);
-                        try {
+                        try
+                        {
                             conn.Open();
                             SqlDataReader reader = cmd.ExecuteReader();
-                            if (reader.HasRows) {
-                                while (reader.Read()) {
+                            if (reader.HasRows)
+                            {
+                                while (reader.Read())
+                                {
                                     argsStr = "exec dbo.sp_OutSMO '" + reader.GetValue(0).ToString() + "'";   //сформирую строку подготовки данных
                                     RunCommandSQL(GetConnectionString(), @argsStr).Wait(); //обработка файла
                                     if (flag)
@@ -1165,16 +1193,19 @@ namespace Scaner
                             }
                             reader.Close();
                         }
-                        catch (Exception ex) {
+                        catch (Exception ex)
+                        {
                             this.SetTextBox6(ex.Message);
                         }
                     }
                 }
-                catch (Exception ex) {
+                catch (Exception ex)
+                {
                     this.SetTextBox6(string.Format("Ошибка выполнения. {0}", ex.Message));
                     //if (connection != null) connection.Close();
                 }
-                finally {
+                finally
+                {
                     isExecHand_SMO = false;
                     ti2.isExecHand = false;  //флаг потока - выключение
                     ev2.Set();   //в пуле выключить поток WaitProc
@@ -1201,11 +1232,14 @@ namespace Scaner
             tmpDir = Environment.GetEnvironmentVariable("TEMP");    //папка временных файлов
             sf.nameSrvSQL = this.textBox4.Text;
 
-            if (isExecHand_FSB) {
+            if (isExecHand_FSB)
+            {
                 this.SetTextBox6(string.Format(errList[1] + " {0}", DateTime.Now));
             }
-            else {
-                try {
+            else
+            {
+                try
+                {
                     isExecHand_FSB = true;  //блокировка запуска потока
                     ti3.isExecHand = true;  //флаг потока - включение
                     ti3.txtLabel = "ФСБ";
@@ -1228,10 +1262,12 @@ namespace Scaner
                         }
                     }
                 }
-                catch (Exception ex) {
+                catch (Exception ex)
+                {
                     this.SetTextBox6(string.Format("Ошибка выполнения. {0}", ex.Message));
                 }
-                finally {
+                finally
+                {
                     isExecHand_FSB = false;
                     ti3.isExecHand = false;  //флаг потока - выключение
                     ev3.Set();   //в пуле выключить поток WaitProc
@@ -1247,14 +1283,17 @@ namespace Scaner
         /// </summary>
         /// <returns>Запуск сканера</returns>
         private void RunScaner()
-        {   //сканер наличия файлов в папке ( вкл/выкл )
-            try {
-                while (true) {
+        {
+            try
+            {
+                while (true)
+                {
                     if (((start <= finish) && ((DateTime.Now.Hour >= start) && (DateTime.Now.Hour <= finish))) || ((start > finish) && ((DateTime.Now.Hour >= start) && (DateTime.Now.Hour <= finish + 12))))
                     {
                         //TimeSpan interval = new TimeSpan(0, 0, takt);
                         //Thread.Sleep(interval);
-                        if (!isExecHand) {
+                        if (!isExecHand)
+                        {
                             this.notifyIcon1.Icon = Properties.Resources.Icon3;
                             this.WorkupThread = new Thread(new ThreadStart(this.ThreadProcSafe_1));
                             this.WorkupThread.Start();
@@ -1262,20 +1301,22 @@ namespace Scaner
                     }
                     else
                         this.notifyIcon1.Icon = Properties.Resources.Icon2;
+
                     Thread.Sleep(new TimeSpan(0, 0, takt));
                 }
             }
-            catch (Exception) {
+            catch (Exception)
+            {
                 //this.SetTextBox6(string.Format("Сканер отключен. {0}", DateTime.Now + ". " + ex.Message));
                 this.SetTextBox6($"Сканер отключен. {DateTime.Now}({Environment.MachineName}-{Environment.UserName})");
             }
-            finally {
+            finally
+            {
                 isExecScaner = false;
                 this.SetLabel10("Ожидание запуска.");
                 this.notifyIcon1.Icon = Properties.Resources.Icon1;
             }
         }
-
         /// <summary>
         /// Активация сканера
         /// </summary>
@@ -1344,6 +1385,22 @@ namespace Scaner
             }
         }
 
+        private bool ValueCheck()
+        {
+            bool test = false;
+            if ((errorProvider1.GetError(textBox1) == "")
+                && (errorProvider1.GetError(textBox2) == "")
+                && (errorProvider1.GetError(textBox3) == "")
+                && (errorProvider1.GetError(textBox4) == ""))
+            {
+                this.SetLabel10("");
+                test = true;
+            }
+            else
+                this.SetLabel10("Требуется исправить отмеченные параметры!");
+
+            return test;
+        }
         /// <summary>
         /// Системный проводник - выбор папки. 
         /// </summary>
@@ -1356,20 +1413,21 @@ namespace Scaner
             {
                 return folderBrowserDialog1.SelectedPath;
             }
-            else return null;
+            else
+                return null;
         }
-
         private void Button1_Click(object sender, EventArgs e)
         {
             string tmpPatch;
-            folderBrowserDialog1.SelectedPath = global::Scaner.Properties.Settings.Default.Path_Inp;
             //folderBrowserDialog1.RootFolder = Path.GetPathRoot(tmpPatch);
             //folderBrowserDialog1.RootFolder = Environment.SpecialFolder.NetworkShortcuts;
+            folderBrowserDialog1.SelectedPath = global::Scaner.Properties.Settings.Default.Path_Inp;
             tmpPatch = FolderBrowserDialog();
             if (tmpPatch != null)
             {
-                textBox1.Text = tmpPatch + @"\"; // Properties.Settings.Default.Path_Inp;
+                textBox1.Text = tmpPatch + @"\";
                 Properties.Settings.Default.Path_Inp = tmpPatch + @"\";
+                errorProvider1.SetError(textBox1, "");
             }
         }
         private void Button2_Click(object sender, EventArgs e)
@@ -1379,9 +1437,9 @@ namespace Scaner
             tmpPatch = FolderBrowserDialog();
             if (tmpPatch != null)
             {
-                //global::VerificationAttachment.Properties.Settings.Default.Path_Out = tmpPatch + @"\";
-                textBox2.Text = tmpPatch + @"\";// global::VerificationAttachment.Properties.Settings.Default.Path_Out;
+                textBox2.Text = tmpPatch + @"\";
                 Properties.Settings.Default.Path_Out = tmpPatch + @"\";
+                errorProvider1.SetError(textBox2, "");
             }
         }
         private void Button3_Click(object sender, EventArgs e)
@@ -1389,47 +1447,28 @@ namespace Scaner
             string tmpPatch;
             folderBrowserDialog1.SelectedPath = Properties.Settings.Default.Path_Tmp;
             tmpPatch = FolderBrowserDialog();
-            if (tmpPatch != null) {
-                //global::VerificationAttachment.Properties.Settings.Default.Path_Tmp = "" + tmpPatch + @"\";
-                textBox3.Text = tmpPatch + @"\";// global::VerificationAttachment.Properties.Settings.Default.Path_Tmp;
+            if (tmpPatch != null)
+            {
+                textBox3.Text = tmpPatch + @"\";
                 Properties.Settings.Default.Path_Tmp = tmpPatch + @"\";
+                errorProvider1.SetError(textBox3, "");
             }
         }
         private void Button4_Click(object sender, EventArgs e)
         {
-            MessageBox.Show(string.Format(errList[ut.TestConnectSQL_2()]), "Внимание!");
-            //TestConnectSQL_2();
-            /*
-            Stream myStream = null;
-            //OpenFileDialog openFileDialog1 = new OpenFileDialog();
-
-            openFileDialog1.InitialDirectory = global::VerificationAttachment.Properties.Settings.Default.Path_Arch;
-            openFileDialog1.Filter = "exe files (*.exe)|*.exe|All files (*.*)|*.*";
-            openFileDialog1.FilterIndex = 2;
-            openFileDialog1.RestoreDirectory = true;
-
-            if (openFileDialog1.ShowDialog() == DialogResult.OK) {
-                try 
-                {
-                    if ((myStream = openFileDialog1.OpenFile()) != null) 
-                    {
-                        using (myStream) 
-                        {
-                            global::VerificationAttachment.Properties.Settings.Default.Path_Arch = openFileDialog1.FileName;
-                            textBox4.Text = global::VerificationAttachment.Properties.Settings.Default.Path_Arch;
-                        }
-                    }
-                }
-                catch (Exception ex) {
-                    MessageBox.Show(errList[4] + ex.Message);
-                }
-            }
-            */
+            //MessageBox.Show(string.Format(errList[ut.TestConnectSQL_2()]), "Внимание!");
+            //if (ut.TestConnectSQL_2() == 8)
+            //    errorProvider1.SetError(textBox4, string.Format(errList[8], textBox4.Text));
+            //else {
+            //    Properties.Settings.Default.NameSrvSQL = textBox4.Text;
+            //    errorProvider1.SetError(textBox1, "");
+            //}
+            if (!BDSQL_Validated(textBox4))
+                MessageBox.Show(string.Format(errList[8]), "Внимание!");
         }
-        private void Button5_Click(object sender, EventArgs e) {
+        private void Button5_Click(object sender, EventArgs e)
+        {
             Stream myStream = null;
-            //OpenFileDialog openFileDialog1 = new OpenFileDialog();
-
             openFileDialog1.InitialDirectory = global::Scaner.Properties.Settings.Default.Path_Bcp;
             openFileDialog1.Filter = "exe files (bcp.exe)|bcp.exe|All files (*.*)|*.*";
             openFileDialog1.FilterIndex = 2;
@@ -1456,20 +1495,24 @@ namespace Scaner
         }
         private void Button7_Click(object sender, EventArgs e)
         {
-            this.SetLabel10("Выполняется обработка");
-            if (isExecHand)
+            if (ValueCheck())
             {
-                this.SetTextBox6("Идёт обработка. Пожалуйста, дождитесь завершения.");
+                if (isExecHand)
+                {
+                    this.SetTextBox6("Идёт обработка. Пожалуйста, дождитесь завершения.");
+                }
+                else
+                {
+                    this.SetLabel10("Включена обработка...");
+                    this.WorkupThread = new Thread(new ThreadStart(this.ThreadProcSafe_1));
+                    this.WorkupThread.Start();
+                }
             }
-            else
-            {
-                this.WorkupThread = new Thread(new ThreadStart(this.ThreadProcSafe_1));
-                this.WorkupThread.Start();
-            }
-        }
+         }
         private void Button8_Click(object sender, EventArgs e)
         {
-            ActivationScaner();
+            if (ValueCheck())
+                ActivationScaner();
         }
         private void Button9_Click(object sender, EventArgs e)
         {
@@ -1504,14 +1547,16 @@ namespace Scaner
         private void CheckBox1_Click(object sender, EventArgs e)
         {
             bool b;
-            b= checkBox1.Checked;
+            b = checkBox1.Checked;
             //вкл/выкл режима загрузки программы при запуске Windows
             Properties.Settings.Default.AutoRunApp = b;
-            if (!b) {
+            if (!b)
+            {
                 ut.DisenableAutoRun();
                 //checkBox1.CheckAlign = ContentAlignment.MiddleRight;
             }
-            else {
+            else
+            {
                 ut.EnableAutoRun();
                 //checkBox1.CheckAlign = ContentAlignment.MiddleLeft;
             }
@@ -1536,57 +1581,63 @@ namespace Scaner
             Properties.Settings.Default.Storage_Depth = comboBox3.Text;
         }
 
-        private void TextBox1_Validated(object sender, EventArgs e)
-        {
-            string s = textBox1.Text.Substring(textBox1.Text.Length - 1);
-            s = textBox1.Text + ((s != @"\") ? @"\" : ""); //Path.Combine(textBox1.Text, ((s != @"\") ? @"\" : ""));
-            if (!Directory.Exists(s))
+        private bool Path_Validated(TextBox sender)
+        {   //^(?:[a-z]:\\(?:[a-z0-9-]+(?:[a-z0-9-]+)*\.)+[a-z0-9-]+)  - путь с файлом
+            bool test = false;
+            if (!string.IsNullOrEmpty(sender.Text) && !Regex.IsMatch(sender.Text, @"^(?:[a-z]:\\(?:[a-zа-я0-9-]))"))
             {
-                MessageBox.Show(errList[0]);
-                //MessageBox.Show("Указанный каталог не существует или не доступен!\nУкажите новый путь к каталогу.");
-                textBox1.Text = Properties.Settings.Default.Path_Inp;
+                string s = sender.Text.Substring(sender.Text.Length - 1);
+                s = sender.Text + ((s != @"\") ? @"\" : ""); //Path.Combine(textBox1.Text, ((s != @"\") ? @"\" : ""));
+                if (Directory.Exists(s))
+                {
+                    sender.Text = s;
+                    errorProvider1.SetError(sender, "");
+                    test = true;
+                }
+            }
+            if (!test)
+            {
+                //MessageBox.Show(string.Format(errList[0], sender.Text), "Ошибка ввода параметра!", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                errorProvider1.SetError(sender, string.Format(errList[0], sender.Text));
+            }
+            ValueCheck();
+            return test;
+        }
+        private bool BDSQL_Validated(TextBox sender)
+        {
+            bool test = false;
+            if (ut.TestConnectSQL_2() == 7)
+            {
+                errorProvider1.SetError(sender, "");
+                test = true;
             }
             else
-            {
-                textBox1.Text = s;
-                Properties.Settings.Default.Path_Inp = s;
-            }
+                errorProvider1.SetError(sender, string.Format(errList[8], sender.Text));
+
+            ValueCheck();
+            return test;
         }
-        private void TextBox2_Validated(object sender, EventArgs e)
+
+        private void textBox1_Leave(object sender, EventArgs e)
         {
-            string s = textBox2.Text.Substring(textBox2.Text.Length - 1);
-            s = textBox2.Text + ((s != @"\") ? @"\" : ""); //Path.Combine(textBox2.Text, ((s != @"\") ? @"\" : ""));
-            if (!Directory.Exists(s))
-            {
-                MessageBox.Show(errList[0]);
-                //MessageBox.Show("Указанный каталог не существует или не доступен!\nУкажите новый путь к каталогу.");
-                textBox2.Text = Properties.Settings.Default.Path_Out;
-            }
-            else
-            {
-                textBox2.Text = s;
-                Properties.Settings.Default.Path_Out = s;
-            }
+            if (Path_Validated(textBox1))
+                Properties.Settings.Default.Path_Inp = textBox1.Text;
         }
-        private void TextBox3_Validated(object sender, EventArgs e)
+        private void textBox2_Leave(object sender, EventArgs e)
         {
-            string s = textBox3.Text.Substring(textBox3.Text.Length - 1);
-            s = textBox3.Text + ((s != @"\") ? @"\" : ""); //Path.Combine(textBox3.Text, ((s != @"\") ? @"\" : ""));
-            if (!Directory.Exists(s))
-            {
-                MessageBox.Show(errList[0]);
-                //MessageBox.Show("Указанный каталог не существует или не доступен!\nУкажите новый путь к каталогу.");
-                textBox3.Text = Properties.Settings.Default.Path_Tmp;
-            }
-            else
-            {
-                textBox3.Text = s;
-                Properties.Settings.Default.Path_Tmp = s;
-            }
+            if (Path_Validated(textBox2))
+                Properties.Settings.Default.Path_Out = textBox2.Text;
         }
-        private void TextBox4_Validated(object sender, EventArgs e)
+        private void textBox3_Leave(object sender, EventArgs e)
         {
-            MessageBox.Show(string.Format(errList[ut.TestConnectSQL_2()]), "Внимание!");
+            if (Path_Validated(textBox3))
+                Properties.Settings.Default.Path_Tmp = textBox3.Text;
+        }
+        private void textBox4_Leave(object sender, EventArgs e)
+        {
+            //MessageBox.Show(string.Format(errList[ut.TestConnectSQL_2()]), "Внимание!");
+            if (BDSQL_Validated(textBox4))
+                Properties.Settings.Default.NameSrvSQL = textBox4.Text;
         }
         private void TextBox7_Validated(object sender, EventArgs e)
         {
@@ -1622,11 +1673,25 @@ namespace Scaner
             }
             else
             {  // установить ошибку, если некорректно и установить значение по умолчанию
-                errorProvider1.SetError(this.textBox8, errList[5]);
+                errorProvider1.SetError(this.textBox9, errList[5]);
                 this.textBox9.Text = "99999";
             }
             Properties.Settings.Default.MaxRecSZ = textBox9.Text;
         }
+        private void TextBox10_Validated(object sender, EventArgs e)
+        {
+            if (!string.IsNullOrEmpty(textBox10.Text) && !Regex.IsMatch(textBox10.Text, @"(\D)"))
+            { // очистить ошибку.
+                errorProvider1.SetError(this.textBox10, "");
+            }
+            else
+            {  // установить ошибку, если некорректно и установить значение по умолчанию
+                errorProvider1.SetError(this.textBox10, errList[5]);
+                this.textBox10.Text = "30000";
+            }
+            Properties.Settings.Default.MaxRecQA = textBox10.Text;
+        }
+ 
     }
 
     // ---------  классы и структуры программы  ----------

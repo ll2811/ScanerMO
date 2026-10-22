@@ -199,5 +199,17 @@ namespace Scaner.Properties {
                 this["MaxRecSZ"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("30000")]
+        public string MaxRecQA {
+            get {
+                return ((string)(this["MaxRecQA"]));
+            }
+            set {
+                this["MaxRecQA"] = value;
+            }
+        }
     }
 }

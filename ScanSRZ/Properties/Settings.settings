@@ -48,5 +48,8 @@
     <Setting Name="MaxRecSZ" Type="System.String" Scope="User">
       <Value Profile="(Default)">99999</Value>
     </Setting>
+    <Setting Name="MaxRecQA" Type="System.String" Scope="User">
+      <Value Profile="(Default)">30000</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

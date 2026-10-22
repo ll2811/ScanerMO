@@ -147,20 +147,17 @@ namespace Scaner
         /// Получить строку подключения к БД.
         /// </summary>
         public string GetConnectionString() { 
-            //return "Data Source=" + sf.nameSrvSQL + ";Initial Catalog=PeopleAttach;Integrated Security=True;Asynchronous Processing=True";
-            //return global::VerificationAttachment.Properties.Settings.Default.ConnectDB;
             return "Data Source=" + Properties.Settings.Default.NameSrvSQL + ";Initial Catalog=PeopleAttach;Integrated Security=True;Asynchronous Processing=True;Application Name=ScanSRZ";
-            //return "Data Source=" + sf.nameSrvSQL + ";Initial Catalog=PeopleAttach;Integrated Security=True;Application Name=ScanSRZ";
         }
 
         /// <summary>
         /// Проверить доступ подключения к БД.
         /// </summary>
         public int TestConnectSQL_2() {
-            Cursor tempCursor = Cursor.Current;     //запомню тек.изображение мышки
-            Cursor.Current = Cursors.WaitCursor;    //установим изображение "ожидания"
+            Cursor tempCursor = Cursor.Current;     //запомню текущее изображение мышки
+            Cursor.Current = Cursors.WaitCursor;    //сделаю изображение "ожидания"
 
-            string connectionString = "Data Source=" + Properties.Settings.Default.NameSrvSQL + ";Initial Catalog=PeopleAttach;Integrated Security=True;Asynchronous Processing=True;Connection Timeout=1";
+            string connectionString = GetConnectionString() + ";Connection Timeout=1";
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 try

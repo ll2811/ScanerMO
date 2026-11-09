@@ -1,17 +1,17 @@
 ﻿using System;
 using System.IO;
-//using System.Diagnostics;
-//using System.ComponentModel;
 using System.Data;
 using System.Data.OleDb;
 using System.Data.Odbc;
 using System.Data.SqlClient;
-//using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
+//using System.Diagnostics;
+//using System.ComponentModel;
+//using System.Drawing;
 //using ICSharpCode.SharpZipLib.Zip;
 //using System.ServiceModel;
 //using System.Reflection;
@@ -97,13 +97,12 @@ namespace Scaner
         {
             InitializeComponent();
             //string s;// = System.Deployment.Application.ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
-            this.Text = "Сканер для СРЗ (версия " + Application.ProductVersion.ToString() + ").";
             //Text = "Сканер файлов по прикреплению ЗЛ к МО 5.(" + System.Windows.Forms.Application.ProductVersion.ToString() + ").";
+            this.Text = "Сканер для СРЗ (версия " + Application.ProductVersion.ToString() + ").";
 
         }
         private void Form1_Load(object sender, EventArgs e)
         {
-            //string Text = "Сканер для СРЗ (версия " + System.Windows.Forms.Application.ProductVersion.ToString() + ")";
             //проверка текущих значений параметров
             Path_Validated(textBox1);
             Path_Validated(textBox2);
@@ -1133,8 +1132,8 @@ namespace Scaner
         }
         private void ThreadProcSafe_2()
         {
-            string outDir;   //папка ответных файлов
-            string tmpDir;     //папка временных файлов
+            string outDir;      //папка ответных файлов
+            string tmpDir;      //папка временных файлов
             string arcDir;      //папка архивных файлов
             string arcOutDir;   //папка Arc\Out ответных файлов
             string argsStr;     //строка аргумента
@@ -1278,10 +1277,9 @@ namespace Scaner
         }
 
         /// <summary>
-        /// Включение авто-тактового режима работы сканера по расписанию
-        /// (сканер наличия файлов в папке)
+        /// Включение работы (по расписанию) сканера в режиме тактового сканирования папки полученных файлов
         /// </summary>
-        /// <returns>Запуск сканера</returns>
+        /// <returns>Запуск сканера(по расписанию)</returns>
         private void RunScaner()
         {
             try

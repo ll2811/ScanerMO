@@ -176,10 +176,12 @@ namespace Scaner
             }
         }
 
-        // Возвращаем nullable тип, так как записей может не быть
         /// <summary>
         /// Проверить доступ подключения к БД.
         /// </summary>
+        /// <comment>
+        /// Возвращаем nullable тип, так как записей может не быть
+        /// </comment>
         public async Task<int?> GetIdRecordTblAsync(string queryString) {
             SqlConnection connection = null;
             SqlCommand cmd = null;
